@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>免費廣東話語音記帳 App</title>
+    <title>EASY App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -20,6 +20,7 @@
         .page-active { display: block; }
         .calendar-day.selected { background-color: #4f46e5; color: white; border-radius: 9999px; }
         .has-expense::after { content: ''; display: block; width: 4px; height: 4px; background: #ef4444; border-radius: 50%; margin: 2px auto 0; }
+        .trip-card { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-24">
@@ -29,7 +30,7 @@
         <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
             <div class="flex justify-between items-start">
                 <div>
-                    <h1 class="text-xl font-bold">廣東話記帳本</h1>
+                    <h1 class="text-xl font-bold">EASY</h1>
                     <p class="text-indigo-100 text-sm opacity-80" id="currentDate"></p>
                 </div>
                 <div class="flex gap-2">
@@ -40,11 +41,11 @@
             
             <div class="mt-4 grid grid-cols-2 gap-4">
                 <div class="bg-white/20 p-3 rounded-2xl">
-                    <p class="text-xs">今日支出</p>
+                    <p class="text-xs">今日支出 (HKD)</p>
                     <p class="text-lg font-bold" id="todayTotal">$0</p>
                 </div>
                 <div class="bg-white/20 p-3 rounded-2xl">
-                    <p class="text-xs">本月累計</p>
+                    <p class="text-xs">本月累計 (HKD)</p>
                     <p class="text-lg font-bold" id="monthTotal">$0</p>
                 </div>
             </div>
@@ -79,21 +80,40 @@
         </header>
 
         <main class="p-4 space-y-4">
-            <!-- 日曆本體 -->
             <div class="bg-white p-4 rounded-2xl shadow-sm">
                 <div class="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">
                     <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
                 </div>
-                <div id="calendarGrid" class="grid grid-cols-7 gap-y-2 text-center text-sm font-medium">
-                    <!-- JS 生成日曆 -->
-                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-y-2 text-center text-sm font-medium"></div>
+            </div>
+            <section>
+                <h2 id="selectedDayLabel" class="text-gray-700 font-bold mb-3">選擇日期</h2>
+                <div id="dayExpenseList" class="space-y-3"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 頁面 3: 旅行 (Trip) -->
+    <div id="page-trip" class="page">
+        <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-bold">旅行行程</h1>
+                <button onclick="openTripModal()" class="bg-white/20 px-3 py-1 rounded-full text-xs">新增行程</button>
+            </div>
+        </header>
+
+        <main class="p-4 space-y-6">
+            <div id="activeTripContainer">
+                <!-- 顯示當前行程卡片 -->
             </div>
 
-            <!-- 選中日期的清單 -->
             <section>
-                <h2 id="selectedDayLabel" class="text-gray-700 font-bold mb-3">選擇日期查看支出</h2>
-                <div id="dayExpenseList" class="space-y-3">
-                    <div class="text-center py-8 text-gray-400 text-xs">請點擊上方日期</div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-gray-700 font-bold italic">行程支出明細</h2>
+                    <button onclick="clearTripRecords()" id="clearTripBtn" class="text-xs text-red-400 hidden">清空行程紀錄</button>
+                </div>
+                <div id="tripExpenseList" class="space-y-3">
+                    <div class="text-center py-8 text-gray-400 text-xs">暫無行程紀錄</div>
                 </div>
             </section>
         </main>
@@ -102,23 +122,21 @@
     <!-- 底部導覽列 -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 pb-safe z-40">
         <button onclick="switchPage('home')" id="nav-home" class="flex flex-col items-center p-2 text-indigo-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             <span class="text-[10px] mt-1 font-bold">總覽</span>
+        </button>
+        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex flex-col items-center p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span class="text-[10px] mt-1 font-bold">日曆</span>
         </button>
         <div class="relative -top-4">
             <button id="voiceBtn" class="bg-indigo-600 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
             </button>
         </div>
-        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex flex-col items-center p-2 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span class="text-[10px] mt-1 font-bold">日曆</span>
+        <button onclick="switchPage('trip')" id="nav-trip" class="flex flex-col items-center p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span class="text-[10px] mt-1 font-bold">旅行</span>
         </button>
     </nav>
 
@@ -128,24 +146,63 @@
         <div id="liveResult" class="text-xs opacity-70 italic">請講出品項同金額</div>
     </div>
 
-    <!-- 編輯 Modal -->
+    <!-- 旅行編輯 Modal -->
+    <div id="tripModal" class="modal fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeTripModal()"></div>
+        <div class="bg-white w-11/12 max-w-sm rounded-3xl p-6 relative z-10 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4">建立新行程</h3>
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <p class="text-[10px] text-gray-400">熱門地點（點擊自動填寫匯率）</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setQuickTrip('日本', 0.052, '¥')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇯🇵 日本</button>
+                        <button onclick="setQuickTrip('韓國', 0.0058, '₩')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇰🇷 韓國</button>
+                        <button onclick="setQuickTrip('泰國', 0.22, '฿')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇹🇭 泰國</button>
+                        <button onclick="setQuickTrip('歐洲', 8.5, '€')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇪🇺 歐洲</button>
+                        <button onclick="setQuickTrip('英國', 9.9, '£')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇬🇧 英國</button>
+                        <button onclick="setQuickTrip('台灣', 0.24, 'NT$')" class="bg-slate-100 px-3 py-1 rounded-full text-xs hover:bg-indigo-100 hover:text-indigo-600 transition">🇹🇼 台灣</button>
+                    </div>
+                </div>
+                <hr class="border-slate-100">
+                <input id="tripDest" type="text" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="目的地">
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="tripRate" type="number" step="0.000001" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="1外幣=?HKD">
+                    <input id="tripCurrency" type="text" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="貨幣(如:¥)">
+                </div>
+                <div class="flex gap-2"><button onclick="saveTrip()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">開始行程</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支出編輯 Modal -->
     <div id="editModal" class="modal fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="bg-white w-11/12 max-w-sm rounded-3xl p-6 relative z-10 shadow-2xl">
             <h3 id="modalTitle" class="text-lg font-bold text-gray-800 mb-4">編輯紀錄</h3>
             <div class="space-y-4">
                 <input id="editItem" type="text" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="項目">
-                <input id="editAmount" type="number" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="金額">
+                <div class="flex gap-2">
+                    <input id="editAmount" type="number" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="金額">
+                    <select id="isForeign" class="bg-slate-100 border-none rounded-xl px-2 text-xs outline-none">
+                        <option value="0">HKD</option>
+                        <option value="1">外幣</option>
+                    </select>
+                </div>
                 <select id="editCategory" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none">
                     <option value="飲食">飲食</option><option value="交通">交通</option><option value="娛樂">娛樂</option><option value="生活">生活</option><option value="其他">其他</option>
                 </select>
-                <div class="flex gap-2"><button onclick="saveEdit()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">儲存</button><button onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">取消</button></div>
+                <div class="flex gap-2">
+                    <button onclick="saveEdit()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 transition">儲存</button>
+                    <button onclick="deleteRecordFromModal()" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold active:scale-95 transition">刪除</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let trips = JSON.parse(localStorage.getItem('trips')) || [];
+        let activeTrip = trips.find(t => t.active) || null;
         let chart = null;
         let currentEditingId = null;
         let selectedDay = new Date();
@@ -161,20 +218,20 @@
         window.onload = () => {
             updateUI();
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-            renderCalendar();
         };
 
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
             document.getElementById('page-' + pageId).classList.add('page-active');
-            
-            // 更新導覽列顏色
-            document.getElementById('nav-home').classList.toggle('text-indigo-600', pageId === 'home');
-            document.getElementById('nav-home').classList.toggle('text-gray-400', pageId !== 'home');
-            document.getElementById('nav-calendar').classList.toggle('text-indigo-600', pageId === 'calendar');
-            document.getElementById('nav-calendar').classList.toggle('text-gray-400', pageId !== 'calendar');
-
+            ['home', 'calendar', 'trip'].forEach(id => {
+                const nav = document.getElementById('nav-' + id);
+                if(nav) {
+                    nav.classList.toggle('text-indigo-600', pageId === id);
+                    nav.classList.toggle('text-gray-400', pageId !== id);
+                }
+            });
             if (pageId === 'calendar') renderCalendar();
+            if (pageId === 'trip') renderTripView();
         }
 
         function updateUI() {
@@ -182,94 +239,270 @@
             renderChart();
             updateSummary();
             localStorage.setItem('expenses', JSON.stringify(expenses));
-            if (document.getElementById('page-calendar').classList.contains('page-active')) {
-                renderCalendar();
-                showDayExpenses(selectedDay);
-            }
+            localStorage.setItem('trips', JSON.stringify(trips));
+            if (document.getElementById('page-calendar').classList.contains('page-active')) renderCalendar();
+            if (document.getElementById('page-trip').classList.contains('page-active')) renderTripView();
         }
 
         function updateSummary() {
             const now = new Date();
             const todayStr = now.toLocaleDateString();
-            const todaySum = expenses.filter(e => new Date(e.date).toLocaleDateString() === todayStr).reduce((sum, e) => sum + e.amount, 0);
+            const todaySum = expenses.filter(e => new Date(e.date).toLocaleDateString() === todayStr).reduce((sum, e) => {
+                const trip = trips.find(t => t.id === e.tripId);
+                const rate = e.isForeign && trip ? trip.rate : 1;
+                return sum + (e.amount * rate);
+            }, 0);
             const monthSum = expenses.filter(e => {
                 const d = new Date(e.date);
                 return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).reduce((sum, e) => sum + e.amount, 0);
-            document.getElementById('todayTotal').innerText = `$${todaySum.toLocaleString()}`;
-            document.getElementById('monthTotal').innerText = `$${monthSum.toLocaleString()}`;
+            }).reduce((sum, e) => {
+                const trip = trips.find(t => t.id === e.tripId);
+                const rate = e.isForeign && trip ? trip.rate : 1;
+                return sum + (e.amount * rate);
+            }, 0);
+            document.getElementById('todayTotal').innerText = `$${Math.round(todaySum).toLocaleString()}`;
+            document.getElementById('monthTotal').innerText = `$${Math.round(monthSum).toLocaleString()}`;
         }
 
         function renderList() {
             const list = document.getElementById('expenseList');
+            if(!list) return;
             list.innerHTML = '';
-            const displayData = [...expenses].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
-            if (displayData.length === 0) {
-                list.innerHTML = `<div class="text-center py-8 bg-white rounded-2xl border-2 border-dashed border-gray-100 text-gray-400 text-xs">仲未有紀錄喎</div>`;
-                return;
-            }
+            const displayData = [...expenses].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
             displayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
         }
 
         function createExpenseItem(exp) {
             const div = document.createElement('div');
-            div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center active:bg-slate-50 transition";
+            div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center active:bg-slate-50 transition cursor-pointer";
             div.onclick = () => openEditModal(exp);
+            
+            let amountDisplay = `$${exp.amount}`;
+            const trip = trips.find(t => t.id === e.tripId) || activeTrip;
+            if(exp.isForeign && trip) {
+                amountDisplay = `${trip.currency}${exp.amount} (≈$${Math.round(exp.amount * trip.rate)})`;
+            }
+
             div.innerHTML = `
                 <div class="flex items-center space-x-3 pointer-events-none">
                     <div class="w-8 h-8 bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center font-bold text-[8px]">${exp.category}</div>
                     <div><p class="font-bold text-gray-800 text-xs">${exp.item}</p><p class="text-[9px] text-gray-400">${new Date(exp.date).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})}</p></div>
                 </div>
-                <div class="text-right pointer-events-none"><p class="font-black text-indigo-600 text-sm">-$${exp.amount}</p></div>
+                <div class="text-right pointer-events-none"><p class="font-black text-indigo-600 text-sm">-${amountDisplay}</p></div>
             `;
             return div;
         }
 
-        // --- 日曆功能 ---
+        function setQuickTrip(dest, rate, curr) {
+            document.getElementById('tripDest').value = dest;
+            document.getElementById('tripRate').value = rate;
+            document.getElementById('tripCurrency').value = curr;
+        }
+
+        function openTripModal() { 
+            document.getElementById('tripModal').classList.remove('pointer-events-none'); 
+            document.getElementById('tripModal').classList.add('opacity-100'); 
+        }
+        function closeTripModal() { 
+            document.getElementById('tripModal').classList.add('pointer-events-none'); 
+            document.getElementById('tripModal').classList.remove('opacity-100'); 
+        }
+        
+        function saveTrip() {
+            const dest = document.getElementById('tripDest').value;
+            const rate = parseFloat(document.getElementById('tripRate').value);
+            const curr = document.getElementById('tripCurrency').value || '$';
+            if(!dest || !rate) return alert('請輸入目的地同匯率');
+            
+            trips.forEach(t => t.active = false);
+            activeTrip = { id: Date.now(), dest, rate, currency: curr, active: true, date: new Date().toISOString() };
+            trips.push(activeTrip);
+            updateUI(); closeTripModal();
+        }
+
+        function endTrip() {
+            if(confirm('確定結束行程？之後新紀錄將恢復港幣計算。')) {
+                if(activeTrip) activeTrip.active = false;
+                activeTrip = null;
+                updateUI();
+            }
+        }
+
+        function clearTripRecords() {
+            if(confirm('確定刪除所有屬於此行程的支出紀錄？')) {
+                expenses = expenses.filter(e => e.tripId !== activeTrip.id);
+                updateUI();
+            }
+        }
+
+        function renderTripView() {
+            const container = document.getElementById('activeTripContainer');
+            const list = document.getElementById('tripExpenseList');
+            const clearBtn = document.getElementById('clearTripBtn');
+            
+            if(!activeTrip) {
+                container.innerHTML = `<div class="bg-indigo-50 border border-indigo-100 p-8 rounded-2xl text-center"><p class="text-indigo-400 text-sm mb-4">目前冇進行中嘅旅行</p><button onclick="openTripModal()" class="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-lg">建立新行程</button></div>`;
+                list.innerHTML = '';
+                if(clearBtn) clearBtn.classList.add('hidden');
+                return;
+            }
+
+            if(clearBtn) clearBtn.classList.remove('hidden');
+
+            const tripExps = expenses.filter(e => activeTrip && e.tripId === activeTrip.id);
+            const totalForeign = tripExps.reduce((s, e) => s + e.amount, 0);
+            const totalHKD = Math.round(totalForeign * activeTrip.rate);
+
+            container.innerHTML = `
+                <div class="trip-card text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-4">
+                            <div><p class="text-xs opacity-70">當前行程</p><h2 class="text-2xl font-bold">${activeTrip.dest}</h2></div>
+                            <button onclick="endTrip()" class="bg-white/20 px-3 py-1 rounded-full text-[10px]">結束行程</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><p class="text-[10px] opacity-70">總開支 (${activeTrip.currency})</p><p class="text-xl font-black">${totalForeign.toLocaleString()}</p></div>
+                            <div><p class="text-[10px] opacity-70">折合港幣 (HKD)</p><p class="text-xl font-black">$${totalHKD.toLocaleString()}</p></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            list.innerHTML = '';
+            if(tripExps.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">行程中暫無支出</div>';
+            } else {
+                tripExps.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(exp => list.appendChild(createExpenseItem(exp)));
+            }
+        }
+
+        function openManualInput() { 
+            currentEditingId = null; 
+            document.getElementById('modalTitle').innerText = '手動輸入'; 
+            document.getElementById('editItem').value = ''; 
+            document.getElementById('editAmount').value = ''; 
+            document.getElementById('isForeign').value = activeTrip ? "1" : "0"; 
+            toggleModal(true); 
+        }
+        function openEditModal(exp) { 
+            currentEditingId = exp.id; 
+            document.getElementById('modalTitle').innerText = '編輯紀錄'; 
+            document.getElementById('editItem').value = exp.item; 
+            document.getElementById('editAmount').value = exp.amount; 
+            document.getElementById('editCategory').value = exp.category; 
+            document.getElementById('isForeign').value = exp.isForeign ? "1" : "0"; 
+            toggleModal(true); 
+        }
+        function closeModal() { toggleModal(false); }
+        function toggleModal(show) { 
+            const m = document.getElementById('editModal'); 
+            if(show){m.classList.remove('pointer-events-none'); m.classList.add('opacity-100');}
+            else{m.classList.add('pointer-events-none'); m.classList.remove('opacity-100');}
+        }
+        
+        function saveEdit() {
+            const item = document.getElementById('editItem').value.trim();
+            const amount = parseInt(document.getElementById('editAmount').value);
+            const category = document.getElementById('editCategory').value;
+            const isForeign = document.getElementById('isForeign').value === "1";
+            if(!item || isNaN(amount)) return alert('輸入有誤');
+            
+            if(currentEditingId){
+                const idx = expenses.findIndex(e => String(e.id) === String(currentEditingId));
+                if(idx !== -1) expenses[idx] = {...expenses[idx], item, amount, category, isForeign};
+            }else{
+                expenses.push({
+                    id: Date.now().toString(), 
+                    item, 
+                    amount, 
+                    category, 
+                    isForeign, 
+                    tripId: (isForeign && activeTrip) ? activeTrip.id : null, 
+                    date: selectedDay ? selectedDay.toISOString() : new Date().toISOString()
+                });
+            }
+            updateUI(); closeModal();
+        }
+
+        function deleteRecordFromModal() {
+            if(currentEditingId && confirm('確定刪除此紀錄？')) {
+                expenses = expenses.filter(e => String(e.id) !== String(currentEditingId));
+                updateUI(); closeModal();
+            }
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'zh-HK';
+            recognition.onstart = () => { 
+                document.getElementById('voiceBtn').classList.add('recording', 'bg-red-500'); 
+                document.getElementById('toast').classList.remove('hidden'); 
+            };
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                document.getElementById('liveResult').innerText = transcript;
+                if (event.results[event.results.length - 1].isFinal) {
+                    const amountMatch = transcript.match(/\d+/);
+                    if (amountMatch) {
+                        const amount = parseInt(amountMatch[0]);
+                        let item = transcript.replace(amountMatch[0], '').replace(/元|塊|錢|蚊/g, '').trim() || "語音輸入";
+                        let category = '其他';
+                        for (const [cat, keywords] of Object.entries(categories)) { 
+                            if (keywords.some(k => item.includes(k))) { category = cat; break; } 
+                        }
+                        expenses.push({ 
+                            id: Date.now().toString(), 
+                            item, 
+                            amount, 
+                            category, 
+                            isForeign: !!activeTrip, 
+                            tripId: activeTrip ? activeTrip.id : null, 
+                            date: new Date().toISOString() 
+                        });
+                        updateUI();
+                    }
+                    recognition.stop();
+                }
+            };
+            recognition.onend = () => { 
+                document.getElementById('voiceBtn').classList.remove('recording', 'bg-red-500'); 
+                setTimeout(() => document.getElementById('toast').classList.add('hidden'), 1500); 
+            };
+            document.getElementById('voiceBtn').addEventListener('click', () => { 
+                try { recognition.start(); } catch(e) { recognition.stop(); }
+            });
+        }
+
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
-            const monthLabel = document.getElementById('calendarMonthTitle');
+            if(!grid) return;
             grid.innerHTML = '';
-            
             const now = new Date();
-            monthLabel.innerText = now.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long' });
-
+            document.getElementById('calendarMonthTitle').innerText = now.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long' });
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-            // 填充空格
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
-
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateObj = new Date(now.getFullYear(), now.getMonth(), d);
-                const dateStr = dateObj.toLocaleDateString();
-                const isToday = dateStr === new Date().toLocaleDateString();
-                const isSelected = dateStr === selectedDay.toLocaleDateString();
-                const hasExp = expenses.some(e => new Date(e.date).toLocaleDateString() === dateStr);
-
+                const hasExp = expenses.some(e => new Date(e.date).toLocaleDateString() === dateObj.toLocaleDateString());
                 const dayEl = document.createElement('div');
-                dayEl.className = `py-2 calendar-day relative cursor-pointer ${isSelected ? 'selected' : ''} ${isToday && !isSelected ? 'text-indigo-600 font-bold' : ''} ${hasExp ? 'has-expense' : ''}`;
+                dayEl.className = `py-2 relative cursor-pointer ${dateObj.toLocaleDateString() === selectedDay.toLocaleDateString() ? 'selected' : ''} ${hasExp ? 'has-expense' : ''}`;
                 dayEl.innerText = d;
-                dayEl.onclick = () => {
-                    selectedDay = dateObj;
-                    renderCalendar();
-                    showDayExpenses(dateObj);
-                };
+                dayEl.onclick = () => { selectedDay = dateObj; renderCalendar(); showDayExpenses(dateObj); };
                 grid.appendChild(dayEl);
             }
+            showDayExpenses(selectedDay);
         }
 
         function showDayExpenses(date) {
             const list = document.getElementById('dayExpenseList');
-            const label = document.getElementById('selectedDayLabel');
-            const dateStr = date.toLocaleDateString();
-            label.innerText = `${date.getMonth()+1}月${date.getDate()}日 支出清單`;
-            
-            const dayData = expenses.filter(e => new Date(e.date).toLocaleDateString() === dateStr);
+            if(!list) return;
+            document.getElementById('selectedDayLabel').innerText = `${date.getMonth()+1}月${date.getDate()}日 支出清單`;
+            const dayData = expenses.filter(e => new Date(e.date).toLocaleDateString() === date.toLocaleDateString());
             list.innerHTML = '';
-            
-            if (dayData.length === 0) {
-                list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">當日冇任何支出紀錄</div>';
+            if(dayData.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">當日冇紀錄</div>';
             } else {
                 dayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
             }
@@ -277,99 +510,45 @@
 
         function renderChart() {
             const canvas = document.getElementById('categoryChart');
+            if(!canvas) return;
             const ctx = canvas.getContext('2d');
-            const dataMap = {};
-            Object.keys(categories).forEach(cat => dataMap[cat] = 0);
-            expenses.forEach(e => {
-                if(dataMap[e.category] !== undefined) dataMap[e.category] += e.amount;
-                else dataMap['其他'] += e.amount;
+            const dataMap = { '飲食': 0, '交通': 0, '娛樂': 0, '生活': 0, '其他': 0 };
+            expenses.forEach(e => { 
+                const trip = trips.find(t => t.id === e.tripId);
+                const val = e.isForeign && trip ? e.amount * trip.rate : e.amount;
+                dataMap[e.category] = (dataMap[e.category] || 0) + val;
             });
             const labels = Object.keys(dataMap).filter(k => dataMap[k] > 0);
-            const values = labels.map(k => dataMap[k]);
             if (chart) chart.destroy();
-            if (labels.length === 0) {
-                document.getElementById('chartFallback').classList.remove('hidden');
-                return;
-            }
+            if (!labels.length) return document.getElementById('chartFallback').classList.remove('hidden');
             document.getElementById('chartFallback').classList.add('hidden');
-            chart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: values, backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } }, cutout: '75%' }
+            chart = new Chart(ctx, { 
+                type: 'doughnut', 
+                data: { 
+                    labels, 
+                    datasets: [{ data: labels.map(l => dataMap[l]), backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'], borderWidth: 0 }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } }, 
+                    cutout: '75%' 
+                } 
             });
         }
 
-        // --- 彈窗邏輯 ---
-        function openManualInput() { currentEditingId = null; document.getElementById('modalTitle').innerText = '手動輸入'; document.getElementById('editItem').value = ''; document.getElementById('editAmount').value = ''; toggleModal(true); }
-        function openEditModal(exp) { currentEditingId = exp.id; document.getElementById('modalTitle').innerText = '編輯紀錄'; document.getElementById('editItem').value = exp.item; document.getElementById('editAmount').value = exp.amount; document.getElementById('editCategory').value = exp.category; toggleModal(true); }
-        function closeModal() { toggleModal(false); }
-        function toggleModal(show) { const m = document.getElementById('editModal'); if(show){m.classList.remove('pointer-events-none'); m.classList.add('opacity-100');}else{m.classList.add('pointer-events-none'); m.classList.remove('opacity-100');}}
+        function clearAll() { if(confirm('清除所有資料？')) { expenses = []; trips = []; activeTrip = null; updateUI(); } }
         
-        function saveEdit() {
-            const item = document.getElementById('editItem').value.trim();
-            const amount = parseInt(document.getElementById('editAmount').value);
-            const category = document.getElementById('editCategory').value;
-            if(!item || isNaN(amount)) return alert('輸入有誤');
-            if(currentEditingId){
-                const idx = expenses.findIndex(e => String(e.id) === String(currentEditingId));
-                if(idx !== -1) expenses[idx] = {...expenses[idx], item, amount, category};
-            }else{
-                expenses.push({id: Date.now().toString(), item, amount, category, date: new Date().toISOString()});
-            }
-            updateUI(); closeModal();
-        }
-
-        function deleteRecord(id) { if(confirm('確定刪除？')){ expenses = expenses.filter(e => String(e.id) !== String(id)); updateUI(); closeModal(); }}
-        function clearAll() { if(confirm('清除所有紀錄？')){ expenses = []; updateUI(); }}
-
         function exportCSV() {
-            let csv = "\uFEFF日期,項目,金額,分類\n";
-            expenses.forEach(e => csv += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.category}\n`);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let csv = "\uFEFF日期,項目,原幣金額,是否外幣,匯率,折合HKD,分類\n";
+            expenses.forEach(e => {
+                const trip = trips.find(t => t.id === e.tripId);
+                const rate = e.isForeign && trip ? trip.rate : 1;
+                csv += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.isForeign?'是':'否'},${rate},${e.amount*rate},${e.category}\n`;
+            });
             const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `記帳備份.csv`;
-            link.click();
-        }
-
-        // --- 語音辨識 ---
-        const voiceBtn = document.getElementById('voiceBtn');
-        const toast = document.getElementById('toast');
-        const liveResult = document.getElementById('liveResult');
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'zh-HK';
-            recognition.interimResults = true;
-            recognition.continuous = false;
-
-            voiceBtn.addEventListener('click', () => { try { recognition.start(); } catch(e) { recognition.stop(); }});
-            recognition.onstart = () => { voiceBtn.classList.add('recording', 'bg-red-500'); toast.classList.remove('hidden'); liveResult.innerText = '聽緊你講嘢...'; };
-            recognition.onresult = (event) => {
-                const transcript = Array.from(event.results).map(result => result[0].transcript).join('');
-                liveResult.innerText = transcript;
-                if (event.results[event.results.length - 1].isFinal) { processVoiceCommand(transcript); recognition.stop(); }
-            };
-            recognition.onend = () => { voiceBtn.classList.remove('recording', 'bg-red-500'); setTimeout(() => toast.classList.add('hidden'), 1500); };
-        }
-
-        function processVoiceCommand(text) {
-            const amountMatch = text.match(/\d+/);
-            if (!amountMatch) return;
-            const amount = parseInt(amountMatch[0]);
-            let item = text.replace(amountMatch[0], '').replace(/元|塊|錢|蚊/g, '').trim();
-            if (!item) item = "語音輸入項目";
-            let category = '其他';
-            for (const [cat, keywords] of Object.entries(categories)) {
-                if (keywords.some(k => item.includes(k))) { category = cat; break; }
-            }
-            expenses.push({ id: Date.now().toString(), item, amount, category, date: new Date().toISOString() });
-            updateUI();
-            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `記帳備份.csv`; link.click();
         }
     </script>
 </body>
