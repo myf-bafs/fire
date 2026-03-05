@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>免費語音記帳 App</title>
+    <title>免費廣東話語音記帳 App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,119 +15,187 @@
             70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        /* 隱藏捲軸但保持滾動功能 */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal { transition: opacity 0.25s ease; }
+        .page { display: none; }
+        .page-active { display: block; }
+        .calendar-day.selected { background-color: #4f46e5; color: white; border-radius: 9999px; }
+        .has-expense::after { content: ''; display: block; width: 4px; height: 4px; background: #ef4444; border-radius: 50%; margin: 2px auto 0; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-28">
+<body class="bg-slate-50 min-h-screen pb-24">
 
-    <!-- 頂部狀態欄 -->
-    <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
-        <div class="flex justify-between items-start">
-            <div>
-                <h1 class="text-xl font-bold">免費記帳本</h1>
-                <p class="text-indigo-100 text-sm opacity-80" id="currentDate"></p>
+    <!-- 頁面 1: 總覽 (Home) -->
+    <div id="page-home" class="page page-active">
+        <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-xl font-bold">廣東話記帳本</h1>
+                    <p class="text-indigo-100 text-sm opacity-80" id="currentDate"></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openManualInput()" class="bg-white/20 px-3 py-1 rounded-full text-xs hover:bg-white/30 transition">手動</button>
+                    <button onclick="exportCSV()" class="bg-white/20 px-3 py-1 rounded-full text-xs hover:bg-white/30 transition">匯出</button>
+                </div>
             </div>
-            <button onclick="exportCSV()" class="bg-white/20 px-3 py-1 rounded-full text-xs hover:bg-white/30 transition">匯出 CSV</button>
-        </div>
-        
-        <div class="mt-4 grid grid-cols-2 gap-4">
-            <div class="bg-white/20 p-3 rounded-2xl">
-                <p class="text-xs">今日支出</p>
-                <p class="text-lg font-bold" id="todayTotal">$0</p>
+            
+            <div class="mt-4 grid grid-cols-2 gap-4">
+                <div class="bg-white/20 p-3 rounded-2xl">
+                    <p class="text-xs">今日支出</p>
+                    <p class="text-lg font-bold" id="todayTotal">$0</p>
+                </div>
+                <div class="bg-white/20 p-3 rounded-2xl">
+                    <p class="text-xs">本月累計</p>
+                    <p class="text-lg font-bold" id="monthTotal">$0</p>
+                </div>
             </div>
-            <div class="bg-white/20 p-3 rounded-2xl">
-                <p class="text-xs">本月累計</p>
-                <p class="text-lg font-bold" id="monthTotal">$0</p>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="p-4 space-y-6">
-        <!-- 圖表區域 -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-gray-500 text-sm font-medium">支出比例</h2>
-                <span id="chartFallback" class="text-[10px] text-gray-300 hidden">暫無資料</span>
-            </div>
-            <div class="h-44 flex justify-center">
-                <canvas id="categoryChart"></canvas>
-            </div>
-        </section>
+        <main class="p-4 space-y-6">
+            <section class="bg-white p-4 rounded-2xl shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-gray-500 text-sm font-medium">支出比例</h2>
+                    <span id="chartFallback" class="text-[10px] text-gray-300 hidden">暫無資料</span>
+                </div>
+                <div class="h-44 flex justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </section>
 
-        <!-- 列表區域 -->
-        <section>
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-gray-700 font-bold italic">Recent Activity</h2>
-                <button onclick="clearAll()" class="text-xs text-red-400 font-medium">清除全部資料</button>
-            </div>
-            <div id="expenseList" class="space-y-3">
-                <!-- 紀錄會顯示在這裡 -->
-            </div>
-        </section>
-    </main>
+            <section>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-gray-700 font-bold italic">最近紀錄</h2>
+                    <button onclick="clearAll()" class="text-xs text-red-400 font-medium">清除全部</button>
+                </div>
+                <div id="expenseList" class="space-y-3"></div>
+            </section>
+        </main>
+    </div>
 
-    <!-- 語音控制浮動欄 -->
-    <div class="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pointer-events-none">
-        <div class="max-w-md mx-auto flex flex-col items-center space-y-2 pointer-events-auto">
-            <p id="hintText" class="text-[10px] text-gray-400 bg-white/80 px-3 py-1 rounded-full shadow-sm">說出「午餐 120 元」</p>
-            <button id="voiceBtn" class="bg-indigo-600 text-white w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-90 hover:bg-indigo-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- 頁面 2: 日曆 (Calendar) -->
+    <div id="page-calendar" class="page">
+        <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
+            <h1 class="text-xl font-bold">收支日曆</h1>
+            <p class="text-indigo-100 text-sm opacity-80" id="calendarMonthTitle"></p>
+        </header>
+
+        <main class="p-4 space-y-4">
+            <!-- 日曆本體 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm">
+                <div class="grid grid-cols-7 text-center text-xs text-gray-400 mb-2">
+                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                </div>
+                <div id="calendarGrid" class="grid grid-cols-7 gap-y-2 text-center text-sm font-medium">
+                    <!-- JS 生成日曆 -->
+                </div>
+            </div>
+
+            <!-- 選中日期的清單 -->
+            <section>
+                <h2 id="selectedDayLabel" class="text-gray-700 font-bold mb-3">選擇日期查看支出</h2>
+                <div id="dayExpenseList" class="space-y-3">
+                    <div class="text-center py-8 text-gray-400 text-xs">請點擊上方日期</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 底部導覽列 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 pb-safe z-40">
+        <button onclick="switchPage('home')" id="nav-home" class="flex flex-col items-center p-2 text-indigo-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span class="text-[10px] mt-1 font-bold">總覽</span>
+        </button>
+        <div class="relative -top-4">
+            <button id="voiceBtn" class="bg-indigo-600 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
             </button>
         </div>
-    </div>
+        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex flex-col items-center p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="text-[10px] mt-1 font-bold">日曆</span>
+        </button>
+    </nav>
 
     <!-- 提示框 -->
     <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-4 rounded-3xl text-sm hidden z-50 text-center shadow-2xl backdrop-blur-sm">
-        <div class="mb-2 font-bold text-indigo-300">正在傾聽中...</div>
-        <div id="liveResult" class="text-xs opacity-70 italic">請說出品項與金額</div>
+        <div class="mb-2 font-bold text-indigo-300">聽緊你講嘢...</div>
+        <div id="liveResult" class="text-xs opacity-70 italic">請講出品項同金額</div>
+    </div>
+
+    <!-- 編輯 Modal -->
+    <div id="editModal" class="modal fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="bg-white w-11/12 max-w-sm rounded-3xl p-6 relative z-10 shadow-2xl">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-800 mb-4">編輯紀錄</h3>
+            <div class="space-y-4">
+                <input id="editItem" type="text" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="項目">
+                <input id="editAmount" type="number" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none" placeholder="金額">
+                <select id="editCategory" class="w-full bg-slate-100 border-none rounded-xl p-3 outline-none">
+                    <option value="飲食">飲食</option><option value="交通">交通</option><option value="娛樂">娛樂</option><option value="生活">生活</option><option value="其他">其他</option>
+                </select>
+                <div class="flex gap-2"><button onclick="saveEdit()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">儲存</button><button onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold">取消</button></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 初始化資料
         let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
         let chart = null;
+        let currentEditingId = null;
+        let selectedDay = new Date();
 
         const categories = {
-            '飲食': ['餐', '飯', '麵', '飲', '喝', '咖啡', '早餐', '午餐', '晚餐', '零食', '肉', '菜'],
-            '交通': ['車', '捷運', '公車', '高鐵', '油', '計程車', 'Uber', '火車', '票'],
-            '娛樂': ['玩', '電影', '歌', '遊戲', '運動', '健身', '旅遊', '門票'],
-            '生活': ['買', '藥', '水', '電', '租', '日用', '衣服', '鞋', '雜貨', '超市'],
+            '飲食': ['餐', '飯', '麵', '飲', '啡', '茶', '早餐', '午餐', '晚餐', '零食', '肉', '菜', '宵夜', '多士'],
+            '交通': ['車', '地鐵', '巴士', '小巴', '的士', 'Uber', '火車', '票', '泊車', '隧道'],
+            '娛樂': ['玩', '戲', '唱', 'Game', '運動', '波', '旅遊', '旅行'],
+            '生活': ['買', '藥', '水', '電', '租', '衫', '鞋', '雜貨', '超市', '淘寶'],
             '其他': []
         };
 
         window.onload = () => {
             updateUI();
-            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('zh-TW', { 
-                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
-            });
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('zh-HK', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            renderCalendar();
         };
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
+            document.getElementById('page-' + pageId).classList.add('page-active');
+            
+            // 更新導覽列顏色
+            document.getElementById('nav-home').classList.toggle('text-indigo-600', pageId === 'home');
+            document.getElementById('nav-home').classList.toggle('text-gray-400', pageId !== 'home');
+            document.getElementById('nav-calendar').classList.toggle('text-indigo-600', pageId === 'calendar');
+            document.getElementById('nav-calendar').classList.toggle('text-gray-400', pageId !== 'calendar');
+
+            if (pageId === 'calendar') renderCalendar();
+        }
 
         function updateUI() {
             renderList();
             renderChart();
             updateSummary();
             localStorage.setItem('expenses', JSON.stringify(expenses));
+            if (document.getElementById('page-calendar').classList.contains('page-active')) {
+                renderCalendar();
+                showDayExpenses(selectedDay);
+            }
         }
 
         function updateSummary() {
             const now = new Date();
             const todayStr = now.toLocaleDateString();
-            
-            const todaySum = expenses
-                .filter(e => new Date(e.date).toLocaleDateString() === todayStr)
-                .reduce((sum, e) => sum + e.amount, 0);
-                
-            const monthSum = expenses
-                .filter(e => {
-                    const d = new Date(e.date);
-                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                })
-                .reduce((sum, e) => sum + e.amount, 0);
-
+            const todaySum = expenses.filter(e => new Date(e.date).toLocaleDateString() === todayStr).reduce((sum, e) => sum + e.amount, 0);
+            const monthSum = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).reduce((sum, e) => sum + e.amount, 0);
             document.getElementById('todayTotal').innerText = `$${todaySum.toLocaleString()}`;
             document.getElementById('monthTotal').innerText = `$${monthSum.toLocaleString()}`;
         }
@@ -135,115 +203,139 @@
         function renderList() {
             const list = document.getElementById('expenseList');
             list.innerHTML = '';
-            
-            const displayData = [...expenses].reverse().slice(0, 20);
-            
+            const displayData = [...expenses].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
             if (displayData.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-100">
-                        <p class="text-gray-400 text-sm">還沒有紀錄喔！</p>
-                        <p class="text-indigo-400 text-xs mt-1">按住麥克風說「咖啡 65 元」</p>
-                    </div>
-                `;
+                list.innerHTML = `<div class="text-center py-8 bg-white rounded-2xl border-2 border-dashed border-gray-100 text-gray-400 text-xs">仲未有紀錄喎</div>`;
                 return;
             }
+            displayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
+        }
 
-            displayData.forEach((exp) => {
-                const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center transition active:scale-95";
-                div.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center font-bold text-[10px]">
-                            ${exp.category}
-                        </div>
-                        <div>
-                            <p class="font-bold text-gray-800 text-sm">${exp.item}</p>
-                            <p class="text-[10px] text-gray-400">${new Date(exp.date).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}</p>
-                        </div>
-                    </div>
-                    <div class="text-right flex flex-col items-end">
-                        <p class="font-black text-indigo-600">-$${exp.amount.toLocaleString()}</p>
-                        <button onclick="deleteRecord('${exp.id}')" class="text-[10px] text-red-300 hover:text-red-500">刪除</button>
-                    </div>
-                `;
-                list.appendChild(div);
-            });
+        function createExpenseItem(exp) {
+            const div = document.createElement('div');
+            div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center active:bg-slate-50 transition";
+            div.onclick = () => openEditModal(exp);
+            div.innerHTML = `
+                <div class="flex items-center space-x-3 pointer-events-none">
+                    <div class="w-8 h-8 bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center font-bold text-[8px]">${exp.category}</div>
+                    <div><p class="font-bold text-gray-800 text-xs">${exp.item}</p><p class="text-[9px] text-gray-400">${new Date(exp.date).toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'})}</p></div>
+                </div>
+                <div class="text-right pointer-events-none"><p class="font-black text-indigo-600 text-sm">-$${exp.amount}</p></div>
+            `;
+            return div;
+        }
+
+        // --- 日曆功能 ---
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthLabel = document.getElementById('calendarMonthTitle');
+            grid.innerHTML = '';
+            
+            const now = new Date();
+            monthLabel.innerText = now.toLocaleDateString('zh-HK', { year: 'numeric', month: 'long' });
+
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+            // 填充空格
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(now.getFullYear(), now.getMonth(), d);
+                const dateStr = dateObj.toLocaleDateString();
+                const isToday = dateStr === new Date().toLocaleDateString();
+                const isSelected = dateStr === selectedDay.toLocaleDateString();
+                const hasExp = expenses.some(e => new Date(e.date).toLocaleDateString() === dateStr);
+
+                const dayEl = document.createElement('div');
+                dayEl.className = `py-2 calendar-day relative cursor-pointer ${isSelected ? 'selected' : ''} ${isToday && !isSelected ? 'text-indigo-600 font-bold' : ''} ${hasExp ? 'has-expense' : ''}`;
+                dayEl.innerText = d;
+                dayEl.onclick = () => {
+                    selectedDay = dateObj;
+                    renderCalendar();
+                    showDayExpenses(dateObj);
+                };
+                grid.appendChild(dayEl);
+            }
+        }
+
+        function showDayExpenses(date) {
+            const list = document.getElementById('dayExpenseList');
+            const label = document.getElementById('selectedDayLabel');
+            const dateStr = date.toLocaleDateString();
+            label.innerText = `${date.getMonth()+1}月${date.getDate()}日 支出清單`;
+            
+            const dayData = expenses.filter(e => new Date(e.date).toLocaleDateString() === dateStr);
+            list.innerHTML = '';
+            
+            if (dayData.length === 0) {
+                list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">當日冇任何支出紀錄</div>';
+            } else {
+                dayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
+            }
         }
 
         function renderChart() {
-            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const canvas = document.getElementById('categoryChart');
+            const ctx = canvas.getContext('2d');
             const dataMap = {};
             Object.keys(categories).forEach(cat => dataMap[cat] = 0);
-            
             expenses.forEach(e => {
                 if(dataMap[e.category] !== undefined) dataMap[e.category] += e.amount;
                 else dataMap['其他'] += e.amount;
             });
-
             const labels = Object.keys(dataMap).filter(k => dataMap[k] > 0);
             const values = labels.map(k => dataMap[k]);
-
             if (chart) chart.destroy();
-            
             if (labels.length === 0) {
                 document.getElementById('chartFallback').classList.remove('hidden');
                 return;
-            } else {
-                document.getElementById('chartFallback').classList.add('hidden');
             }
-
+            document.getElementById('chartFallback').classList.add('hidden');
             chart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'],
-                        hoverOffset: 4,
-                        borderRadius: 5
-                    }]
+                    datasets: [{ data: values, backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'], borderWidth: 0 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 8, padding: 15, font: { size: 10 } } }
-                    },
-                    cutout: '75%'
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } }, cutout: '75%' }
             });
         }
 
-        function deleteRecord(id) {
-            expenses = expenses.filter(e => String(e.id) !== String(id));
-            updateUI();
+        // --- 彈窗邏輯 ---
+        function openManualInput() { currentEditingId = null; document.getElementById('modalTitle').innerText = '手動輸入'; document.getElementById('editItem').value = ''; document.getElementById('editAmount').value = ''; toggleModal(true); }
+        function openEditModal(exp) { currentEditingId = exp.id; document.getElementById('modalTitle').innerText = '編輯紀錄'; document.getElementById('editItem').value = exp.item; document.getElementById('editAmount').value = exp.amount; document.getElementById('editCategory').value = exp.category; toggleModal(true); }
+        function closeModal() { toggleModal(false); }
+        function toggleModal(show) { const m = document.getElementById('editModal'); if(show){m.classList.remove('pointer-events-none'); m.classList.add('opacity-100');}else{m.classList.add('pointer-events-none'); m.classList.remove('opacity-100');}}
+        
+        function saveEdit() {
+            const item = document.getElementById('editItem').value.trim();
+            const amount = parseInt(document.getElementById('editAmount').value);
+            const category = document.getElementById('editCategory').value;
+            if(!item || isNaN(amount)) return alert('輸入有誤');
+            if(currentEditingId){
+                const idx = expenses.findIndex(e => String(e.id) === String(currentEditingId));
+                if(idx !== -1) expenses[idx] = {...expenses[idx], item, amount, category};
+            }else{
+                expenses.push({id: Date.now().toString(), item, amount, category, date: new Date().toISOString()});
+            }
+            updateUI(); closeModal();
         }
 
-        function clearAll() {
-            if(confirm('警告：這會永久刪除手機中的所有記帳紀錄，確定嗎？')) {
-                expenses = [];
-                updateUI();
-            }
-        }
+        function deleteRecord(id) { if(confirm('確定刪除？')){ expenses = expenses.filter(e => String(e.id) !== String(id)); updateUI(); closeModal(); }}
+        function clearAll() { if(confirm('清除所有紀錄？')){ expenses = []; updateUI(); }}
 
         function exportCSV() {
-            if (expenses.length === 0) return alert('目前沒有紀錄可匯出');
-            let csvContent = "\uFEFF日期,項目,金額,分類\n";
-            expenses.forEach(e => {
-                csvContent += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.category}\n`;
-            });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let csv = "\uFEFF日期,項目,金額,分類\n";
+            expenses.forEach(e => csv += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.category}\n`);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `記帳備份_${new Date().toLocaleDateString()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
+            link.href = URL.createObjectURL(blob);
+            link.download = `記帳備份.csv`;
             link.click();
-            document.body.removeChild(link);
         }
 
-        // 語音辨識邏輯
+        // --- 語音辨識 ---
         const voiceBtn = document.getElementById('voiceBtn');
         const toast = document.getElementById('toast');
         const liveResult = document.getElementById('liveResult');
@@ -251,77 +343,32 @@
 
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
-            recognition.lang = 'zh-TW';
-            recognition.interimResults = true; // 開啟即時結果顯示
+            recognition.lang = 'zh-HK';
+            recognition.interimResults = true;
+            recognition.continuous = false;
 
-            voiceBtn.addEventListener('click', () => {
-                try {
-                    recognition.start();
-                    voiceBtn.classList.add('recording', 'bg-red-500');
-                    toast.classList.remove('hidden');
-                    liveResult.innerText = '正在傾聽...';
-                } catch(e) {
-                    console.log("Recognition already started");
-                }
-            });
-
+            voiceBtn.addEventListener('click', () => { try { recognition.start(); } catch(e) { recognition.stop(); }});
+            recognition.onstart = () => { voiceBtn.classList.add('recording', 'bg-red-500'); toast.classList.remove('hidden'); liveResult.innerText = '聽緊你講嘢...'; };
             recognition.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0].transcript)
-                    .join('');
+                const transcript = Array.from(event.results).map(result => result[0].transcript).join('');
                 liveResult.innerText = transcript;
-                
-                if (event.results[0].isFinal) {
-                    processVoiceCommand(transcript);
-                }
+                if (event.results[event.results.length - 1].isFinal) { processVoiceCommand(transcript); recognition.stop(); }
             };
-
-            recognition.onend = () => {
-                voiceBtn.classList.remove('recording', 'bg-red-500');
-                setTimeout(() => toast.classList.add('hidden'), 1000);
-            };
-
-            recognition.onerror = (e) => {
-                console.error(e);
-                toast.classList.add('hidden');
-                if(e.error === 'not-allowed') alert('請允許瀏覽器存取麥克風權限以使用語音功能。');
-            };
-        } else {
-            document.getElementById('hintText').innerText = "您的瀏覽器不支援語音辨識";
-            voiceBtn.style.opacity = "0.5";
+            recognition.onend = () => { voiceBtn.classList.remove('recording', 'bg-red-500'); setTimeout(() => toast.classList.add('hidden'), 1500); };
         }
 
         function processVoiceCommand(text) {
-            // 解析金額：支援「120」、「一百二十」等數字（Speech API 通常會轉成數字）
             const amountMatch = text.match(/\d+/);
             if (!amountMatch) return;
-
             const amount = parseInt(amountMatch[0]);
-            // 過濾掉金額和常見單位詞，剩下的視為品項
-            let item = text.replace(amountMatch[0], '').replace(/元|塊|錢/g, '').trim();
-            
-            if (!item) item = "未命名支出";
-
-            // 自動分類邏輯
+            let item = text.replace(amountMatch[0], '').replace(/元|塊|錢|蚊/g, '').trim();
+            if (!item) item = "語音輸入項目";
             let category = '其他';
             for (const [cat, keywords] of Object.entries(categories)) {
-                if (keywords.some(k => item.includes(k))) {
-                    category = cat;
-                    break;
-                }
+                if (keywords.some(k => item.includes(k))) { category = cat; break; }
             }
-
-            const newExpense = {
-                id: Date.now().toString(),
-                item,
-                amount,
-                category,
-                date: new Date().toISOString()
-            };
-
-            expenses.push(newExpense);
+            expenses.push({ id: Date.now().toString(), item, amount, category, date: new Date().toISOString() });
             updateUI();
-            
             if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
         }
     </script>
