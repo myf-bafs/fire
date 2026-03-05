@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EASY App </title>
+    <title>EASY App - 行程紀錄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -22,6 +22,10 @@
         .has-expense::after { content: ''; display: block; width: 4px; height: 4px; background: #ef4444; border-radius: 50%; margin: 2px auto 0; }
         .trip-card { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); transition: transform 0.2s; }
         .trip-card:active { transform: scale(0.98); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-active .accordion-content { max-height: 2000px; }
+        .accordion-active .chevron { transform: rotate(180deg); }
+        .chevron { transition: transform 0.3s; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-24">
@@ -102,55 +106,41 @@
             </div>
         </header>
         <main class="p-4 space-y-6">
-            <div id="activeTripContainer" class="cursor-pointer"></div>
-            
-            <div id="tripActionArea" class="hidden flex gap-3">
-                <button onclick="openManualInput()" class="flex-1 bg-white border border-indigo-100 py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    <span class="text-sm font-bold text-gray-700">記錄一筆</span>
-                </button>
-                <button onclick="startVoiceRecognition()" class="flex-1 bg-white border border-indigo-100 py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-                    <span class="text-sm font-bold text-gray-700">語音輸入</span>
-                </button>
+            <!-- 當前行程 -->
+            <div id="activeTripSection">
+                <div id="activeTripContainer" class="cursor-pointer"></div>
+                <div id="tripActionArea" class="hidden flex gap-3 mt-4">
+                    <button onclick="openManualInput()" class="flex-1 bg-white border border-indigo-100 py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        <span class="text-sm font-bold text-gray-700">記錄一筆</span>
+                    </button>
+                    <button onclick="startVoiceRecognition()" class="flex-1 bg-white border border-indigo-100 py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        <span class="text-sm font-bold text-gray-700">語音輸入</span>
+                    </button>
+                </div>
             </div>
 
-            <section>
+            <!-- 當前行程明細 (僅在有 activeTrip 時顯示) -->
+            <section id="activeTripDetail" class="hidden">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-gray-700 font-bold italic">行程支出明細</h2>
+                    <h2 class="text-gray-700 font-bold italic">當前行程明細</h2>
                 </div>
-                <div id="tripExpenseList" class="space-y-3">
-                    <div class="text-center py-8 text-gray-400 text-xs">暫無行程紀錄</div>
-                </div>
+                <div id="tripExpenseList" class="space-y-3"></div>
+            </section>
+
+            <!-- 過往行程 (摺疊形式) -->
+            <section>
+                <h2 class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3">過往行程紀錄</h2>
+                <div id="pastTripsList" class="space-y-3"></div>
             </section>
         </main>
     </div>
 
-    <!-- 底部導覽列 -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 pb-safe z-40">
-        <button onclick="switchPage('home')" id="nav-home" class="flex flex-col items-center p-2 text-indigo-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            <span class="text-[10px] mt-1 font-bold">總覽</span>
-        </button>
-        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex flex-col items-center p-2 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
-            <span class="text-[10px] mt-1 font-bold">日曆</span>
-        </button>
-        <div class="relative -top-4">
-            <button id="voiceBtn" class="bg-indigo-600 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-            </button>
-        </div>
-        <button onclick="switchPage('trip')" id="nav-trip" class="flex flex-col items-center p-2 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span class="text-[10px] mt-1 font-bold">旅行</span>
-        </button>
-    </nav>
-
     <!-- 旅行編輯 Modal -->
     <div id="tripModal" class="modal fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeTripModal()"></div>
-        <div class="bg-white w-11/12 max-w-sm rounded-3xl p-6 relative z-10 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white w-11/12 max-sm rounded-3xl p-6 relative z-10 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold mb-4">建立新行程</h3>
             <div class="space-y-4">
                 <div>
@@ -214,6 +204,27 @@
         </div>
     </div>
 
+    <!-- 底部導覽列 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around items-center py-2 pb-safe z-40">
+        <button onclick="switchPage('home')" id="nav-home" class="flex flex-col items-center p-2 text-indigo-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span class="text-[10px] mt-1 font-bold">總覽</span>
+        </button>
+        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex flex-col items-center p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
+            <span class="text-[10px] mt-1 font-bold">日曆</span>
+        </button>
+        <div class="relative -top-4">
+            <button id="voiceBtn" class="bg-indigo-600 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+            </button>
+        </div>
+        <button onclick="switchPage('trip')" id="nav-trip" class="flex flex-col items-center p-2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span class="text-[10px] mt-1 font-bold">旅行</span>
+        </button>
+    </nav>
+
     <!-- 語音狀態提示 -->
     <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-black/80 text-white px-6 py-4 rounded-3xl hidden text-center shadow-2xl">
         <div class="flex flex-col items-center">
@@ -262,11 +273,7 @@
                     const rateToHKD = 1 / data.rates[code];
                     document.getElementById('tripRate').value = rateToHKD.toFixed(6);
                 }
-            } catch (e) {
-                console.error("匯率失敗", e);
-            } finally {
-                loader.classList.add('hidden');
-            }
+            } catch (e) { console.error("匯率失敗", e); } finally { loader.classList.add('hidden'); }
         }
 
         async function refreshActiveTripRate() {
@@ -294,14 +301,15 @@
             });
             if (pageId === 'calendar') renderCalendar();
             if (pageId === 'trip') renderTripView();
+            if (pageId === 'home') renderList();
         }
 
         function updateUI() {
             localStorage.setItem('expenses', JSON.stringify(expenses));
             localStorage.setItem('trips', JSON.stringify(trips));
-            renderList();
-            renderChart();
             updateSummary();
+            renderChart();
+            if (document.getElementById('page-home').classList.contains('page-active')) renderList();
             if (document.getElementById('page-calendar').classList.contains('page-active')) renderCalendar();
             if (document.getElementById('page-trip').classList.contains('page-active')) renderTripView();
         }
@@ -328,13 +336,12 @@
 
         function createExpenseItem(exp) {
             const div = document.createElement('div');
-            div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center active:bg-slate-50 transition cursor-pointer";
+            div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center active:bg-slate-50 transition cursor-pointer border border-transparent hover:border-indigo-100";
             div.onclick = (e) => { e.stopPropagation(); openEditModal(exp); };
             const trip = trips.find(t => t.id === exp.tripId);
             let amountDisplay = `$${exp.amount}`;
-            if(exp.isForeign && (trip || activeTrip)) {
-                const t = trip || activeTrip;
-                amountDisplay = `${t.currency}${exp.amount} (≈$${Math.round(exp.amount * t.rate)})`;
+            if(exp.isForeign && trip) {
+                amountDisplay = `${trip.currency}${exp.amount} (≈$${Math.round(exp.amount * trip.rate)})`;
             }
             div.innerHTML = `
                 <div class="flex items-center space-x-3 pointer-events-none">
@@ -351,6 +358,10 @@
             if(!list) return;
             list.innerHTML = '';
             const displayData = [...expenses].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+            if(displayData.length === 0) {
+                list.innerHTML = '<div class="text-center py-12 text-gray-300 text-xs">暫無紀錄，快去記帳吧！</div>';
+                return;
+            }
             displayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
         }
 
@@ -396,31 +407,29 @@
             updateUI(); closeModal();
         }
 
-        // 修改後的刪除邏輯
         function deleteRecordFromModal() {
             if(currentEditingId && confirm('確定刪除此紀錄？')) {
-                // 使用 String 確保比對成功
                 const targetId = String(currentEditingId);
                 expenses = expenses.filter(e => String(e.id) !== targetId);
-                currentEditingId = null; // 重置狀態
+                currentEditingId = null;
                 updateUI(); 
                 closeModal();
             }
         }
 
-        let recognition;
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = 'zh-HK';
-            recognition.onstart = () => { 
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert('瀏覽器不支持語音辨識');
+            const rec = new SpeechRecognition();
+            rec.lang = 'zh-HK';
+            rec.onstart = () => { 
                 document.getElementById('voiceBtn').classList.add('recording', 'bg-red-500'); 
                 document.getElementById('toast').classList.remove('hidden'); 
             };
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript;
+            rec.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
                 document.getElementById('liveResult').innerText = transcript;
-                if (event.results[event.results.length - 1].isFinal) {
+                if (event.results[0].isFinal) {
                     const amountMatch = transcript.match(/\d+/);
                     if (amountMatch) {
                         const amount = parseFloat(amountMatch[0]);
@@ -432,15 +441,11 @@
                     }
                 }
             };
-            recognition.onend = () => { 
+            rec.onend = () => { 
                 document.getElementById('voiceBtn').classList.remove('recording', 'bg-red-500'); 
                 setTimeout(() => document.getElementById('toast').classList.add('hidden'), 1500); 
             };
-        }
-
-        function startVoiceRecognition() {
-            if (!recognition) return alert('瀏覽器不支持語音辨識');
-            try { recognition.start(); } catch(e) { recognition.stop(); }
+            rec.start();
         }
 
         document.getElementById('voiceBtn').onclick = startVoiceRecognition;
@@ -472,7 +477,7 @@
             document.getElementById('selectedDayLabel').innerText = `${date.getMonth()+1}月${date.getDate()}日 支出清單`;
             const dayData = expenses.filter(e => new Date(e.date).toLocaleDateString() === date.toLocaleDateString());
             list.innerHTML = '';
-            if(dayData.length === 0) list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">當日冇紀錄</div>';
+            if(dayData.length === 0) list.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">當日無紀錄</div>';
             else dayData.forEach(exp => list.appendChild(createExpenseItem(exp)));
         }
 
@@ -506,85 +511,132 @@
             const curr = document.getElementById('tripCurrencySymbol').value || '$';
             const start = document.getElementById('tripStart').value;
             const end = document.getElementById('tripEnd').value;
-            
             if(!dest || !rate || !start || !end) return alert('請填寫完整行程資料');
-            
             trips.forEach(t => t.active = false);
-            activeTrip = { 
-                id: Date.now(), 
-                dest, 
-                rate, 
-                currency: curr, 
-                currencyCode: code, 
-                startDate: start,
-                endDate: end,
-                active: true, 
-                date: new Date().toISOString() 
-            };
+            activeTrip = { id: Date.now(), dest, rate, currency: curr, currencyCode: code, startDate: start, endDate: end, active: true, date: new Date().toISOString() };
             trips.push(activeTrip); 
             updateUI(); 
             closeTripModal();
         }
         
-        function endTrip() { if(confirm('確定結束行程？')) { if(activeTrip) activeTrip.active = false; activeTrip = null; updateUI(); } }
+        function endTrip() { if(confirm('確定結束此行程？它將會移至過往紀錄中。')) { if(activeTrip) activeTrip.active = false; activeTrip = null; updateUI(); } }
         
+        function toggleAccordion(id) {
+            const el = document.getElementById(`trip-accordion-${id}`);
+            const isActive = el.classList.contains('accordion-active');
+            document.querySelectorAll('.accordion-item').forEach(item => item.classList.remove('accordion-active'));
+            if (!isActive) el.classList.add('accordion-active');
+        }
+
         function renderTripView() {
-            const container = document.getElementById('activeTripContainer');
-            const list = document.getElementById('tripExpenseList');
+            const activeContainer = document.getElementById('activeTripContainer');
+            const activeList = document.getElementById('tripExpenseList');
+            const activeDetailSection = document.getElementById('activeTripDetail');
             const actionArea = document.getElementById('tripActionArea');
             const addTripBtn = document.getElementById('addTripBtn');
+            const pastList = document.getElementById('pastTripsList');
 
+            // 1. 處理當前行程
             if(!activeTrip) { 
-                container.innerHTML = `<div class="bg-indigo-50 p-8 rounded-2xl text-center"><p class="text-sm text-indigo-400 mb-4">目前沒有進行中的行程</p><button onclick="openTripModal()" class="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-md">建立新行程</button></div>`; 
-                list.innerHTML = ''; 
+                activeContainer.innerHTML = `<div class="bg-indigo-50 p-8 rounded-2xl text-center"><p class="text-sm text-indigo-400 mb-4">目前沒有進行中的行程</p><button onclick="openTripModal()" class="bg-indigo-600 text-white px-6 py-2 rounded-full font-bold shadow-md">建立新行程</button></div>`; 
+                activeDetailSection.classList.add('hidden');
                 actionArea.classList.add('hidden');
                 addTripBtn.classList.remove('hidden');
-                return; 
+            } else {
+                addTripBtn.classList.add('hidden');
+                actionArea.classList.remove('hidden');
+                activeDetailSection.classList.remove('hidden');
+                const tripExps = expenses.filter(e => e.tripId === activeTrip.id);
+                const totalHKD = tripExps.reduce((sum, e) => sum + (e.amount * activeTrip.rate), 0);
+                const dRange = `${activeTrip.startDate.replace(/-/g, '/')} - ${activeTrip.endDate.replace(/-/g, '/')}`;
+
+                activeContainer.innerHTML = `
+                    <div onclick="openManualInput()" class="trip-card text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-2xl font-bold">${activeTrip.dest}</h2>
+                                <p class="text-[10px] opacity-90 mt-1">${dRange}</p>
+                                <p class="text-[9px] opacity-70 mt-0.5">1 ${activeTrip.currencyCode} = ${activeTrip.rate} HKD</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); endTrip();" class="bg-white/20 h-7 px-3 rounded-full text-[10px] backdrop-blur-md hover:bg-white/40">結束行程</button>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <p class="text-[10px] opacity-70 uppercase tracking-wider">累計支出</p>
+                                <p class="text-2xl font-black">HKD $${Math.round(totalHKD).toLocaleString()}</p>
+                            </div>
+                            <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></div>
+                        </div>
+                    </div>`;
+                activeList.innerHTML = '';
+                if(!tripExps.length) activeList.innerHTML = '<div class="text-center py-8 text-gray-400 text-xs">暫無行程紀錄</div>';
+                else tripExps.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(exp => activeList.appendChild(createExpenseItem(exp)));
             }
 
-            addTripBtn.classList.add('hidden');
-            actionArea.classList.remove('hidden');
+            // 2. 處理過往行程 (Accordion)
+            const pastTrips = trips.filter(t => !t.active).sort((a,b) => new Date(b.date) - new Date(a.date));
+            pastList.innerHTML = '';
+            if(pastTrips.length === 0) {
+                pastList.innerHTML = '<div class="text-center py-8 text-gray-300 text-[10px]">無過往紀錄</div>';
+            } else {
+                pastTrips.forEach(trip => {
+                    const tripExps = expenses.filter(e => e.tripId === trip.id);
+                    const totalHKD = tripExps.reduce((sum, e) => sum + (e.amount * trip.rate), 0);
+                    
+                    const accordion = document.createElement('div');
+                    accordion.id = `trip-accordion-${trip.id}`;
+                    accordion.className = "accordion-item bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden";
+                    
+                    let expHtml = tripExps.length > 0 ? '' : '<div class="text-center py-4 text-gray-400 text-xs">此行程無消費紀錄</div>';
+                    tripExps.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(exp => {
+                        const itemDiv = createExpenseItem(exp);
+                        expHtml += itemDiv.outerHTML;
+                    });
 
-            const tripExps = expenses.filter(e => e.tripId === activeTrip.id);
-            const totalHKD = tripExps.reduce((sum, e) => sum + (e.amount * activeTrip.rate), 0);
-
-            const dRange = `${activeTrip.startDate.replace(/-/g, '/')} - ${activeTrip.endDate.replace(/-/g, '/')}`;
-
-            container.innerHTML = `
-                <div onclick="openManualInput()" class="trip-card text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full"></div>
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h2 class="text-2xl font-bold">${activeTrip.dest}</h2>
-                            <p class="text-[10px] opacity-90 mt-1">${dRange}</p>
-                            <p class="text-[9px] opacity-70 mt-0.5">匯率: 1 ${activeTrip.currencyCode || ''} = ${activeTrip.rate} HKD</p>
+                    accordion.innerHTML = `
+                        <div onclick="toggleAccordion(${trip.id})" class="p-4 flex justify-between items-center cursor-pointer active:bg-gray-50">
+                            <div>
+                                <p class="font-bold text-gray-800 text-sm">${trip.dest}</p>
+                                <p class="text-[10px] text-gray-400">${trip.startDate.replace(/-/g, '/')} - ${trip.endDate.replace(/-/g, '/')}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <p class="text-xs font-bold text-indigo-600">$${Math.round(totalHKD).toLocaleString()}</p>
+                                    <p class="text-[9px] text-gray-400">${tripExps.length} 筆紀錄</p>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="chevron h-4 w-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
                         </div>
-                        <button onclick="event.stopPropagation(); endTrip();" class="bg-white/20 h-7 px-3 rounded-full text-[10px] backdrop-blur-md">結束行程</button>
-                    </div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <p class="text-[10px] opacity-70 uppercase tracking-wider">行程總支出</p>
-                            <p class="text-2xl font-black">HKD $${Math.round(totalHKD).toLocaleString()}</p>
+                        <div class="accordion-content bg-slate-50/50">
+                            <div class="p-4 space-y-2 border-t border-gray-50">
+                                ${expHtml}
+                                <button onclick="deleteTrip(${trip.id})" class="w-full py-2 mt-4 text-[10px] text-red-300 hover:text-red-500 transition">刪除此行程紀錄</button>
+                            </div>
                         </div>
-                        <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        </div>
-                    </div>
-                </div>`;
+                    `;
+                    pastList.appendChild(accordion);
+                });
+            }
+        }
 
-            list.innerHTML = '';
-            if(!tripExps.length) list.innerHTML = '<div class="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-100 text-gray-400 text-xs">點擊上方卡片開始記帳</div>';
-            else tripExps.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(exp => list.appendChild(createExpenseItem(exp)));
+        function deleteTrip(tripId) {
+            if(confirm('確定刪除此行程及其所有消費紀錄？此操作無法還原。')) {
+                expenses = expenses.filter(e => e.tripId !== tripId);
+                trips = trips.filter(t => t.id !== tripId);
+                updateUI();
+            }
         }
 
         function clearAll() { if(confirm('清除所有資料？')) { expenses = []; trips = []; activeTrip = null; updateUI(); } }
         
         function exportCSV() {
-            let csv = "\uFEFF日期,項目,原幣金額,是否外幣,匯率,折合HKD,分類\n";
+            let csv = "\uFEFF日期,項目,原幣金額,是否外幣,匯率,折合HKD,分類,行程\n";
             expenses.forEach(e => {
                 const trip = trips.find(t => t.id === e.tripId);
                 const rate = e.isForeign && trip ? trip.rate : 1;
-                csv += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.isForeign?'是':'否'},${rate},${e.amount*rate},${e.category}\n`;
+                const tripName = trip ? trip.dest : "無";
+                csv += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.isForeign?'是':'否'},${rate},${e.amount*rate},${e.category},${tripName}\n`;
             });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
