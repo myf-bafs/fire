@@ -2,491 +2,328 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沉浸式防火防災 3D 虛擬模擬</title>
-    <!-- 引入 Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>免費語音記帳 App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --glass: rgba(0, 0, 0, 0.7);
-            --glass-bright: rgba(255, 255, 255, 0.1);
-            --danger: #ff4757;
-            --success: #2ed573;
-            --warning: #ffa502;
-            --accent: #00d2ff;
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .recording { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #010101;
-            font-family: -apple-system, "SF Pro Display", "PingFang TC", system-ui, sans-serif;
-            color: white;
-            user-select: none;
-        }
-
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* 空間數位標線與雜訊效果 */
-        #hud-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 15px solid transparent;
-            border-image: linear-gradient(to bottom, var(--accent), transparent) 1;
-            opacity: 0.15;
-            z-index: 2;
-            pointer-events: none;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 2px);
-        }
-
-        #ui-layer {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            pointer-events: none;
-        }
-
-        .main-panel {
-            background: var(--glass);
-            backdrop-filter: blur(100px);
-            -webkit-backdrop-filter: blur(100px);
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 50px;
-            width: 85%;
-            max-width: 800px;
-            text-align: center;
-            box-shadow: 0 40px 150px rgba(0,0,0,1);
-            pointer-events: auto;
-            transform-style: preserve-3d;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            margin-bottom: 25px;
-            color: var(--accent);
-            opacity: 0.8;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            margin: 0 0 10px 0;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(180deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        #timer-bar {
-            width: 100%;
-            height: 3px;
-            background: rgba(255,255,255,0.05);
-            margin-bottom: 35px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        #timer-progress {
-            width: 100%;
-            height: 100%;
-            background: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
-            transition: width 1s linear;
-        }
-
-        #question-box {
-            font-size: 1.5rem;
-            margin-bottom: 45px;
-            font-weight: 500;
-            line-height: 1.6;
-            color: #fff;
-            text-shadow: 0 5px 20px rgba(0,0,0,0.5);
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        .option-card {
-            background: var(--glass-bright);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 35px 25px;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            font-size: 1.2rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .option-card:hover {
-            background: #fff;
-            color: #000;
-            transform: translateZ(50px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        }
-
-        #system-msg {
-            margin-top: 35px;
-            font-size: 1rem;
-            font-weight: 800;
-            height: 1.5em;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* 視覺效果層 */
-        #danger-vignette {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 5;
-            transition: opacity 0.4s, background 0.4s;
-            background: radial-gradient(circle, transparent 20%, rgba(255, 0, 0, 0) 100%);
-            opacity: 0;
-        }
-
-        .alert-active {
-            opacity: 1 !important;
-            background: radial-gradient(circle, transparent 10%, rgba(255, 0, 0, 0.6) 100%) !important;
-            animation: pulse-danger 0.4s infinite alternate;
-        }
-
-        .success-flash {
-            opacity: 1 !important;
-            background: radial-gradient(circle, transparent 10%, rgba(0, 255, 200, 0.3) 100%) !important;
-            transition: opacity 0.8s ease-out;
-        }
-
-        @keyframes pulse-danger {
-            from { filter: brightness(1); }
-            to { filter: brightness(1.8); }
-        }
-
-        .shake-panel {
-            animation: shake-spatial 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            border-color: var(--danger) !important;
-        }
-
-        @keyframes shake-spatial {
-            0%, 100% { transform: translate3d(0, 0, 0); }
-            10%, 30%, 50%, 70%, 90% { transform: translate3d(-10px, -5px, 20px); }
-            20%, 40%, 60%, 80% { transform: translate3d(10px, 5px, -10px); }
-        }
+        /* 隱藏捲軸但保持滾動功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 min-h-screen pb-28">
 
-    <div id="hud-overlay"></div>
-    <div id="danger-vignette"></div>
-    <div id="canvas-container"></div>
+    <!-- 頂部狀態欄 -->
+    <header class="bg-indigo-600 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-10">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-xl font-bold">免費記帳本</h1>
+                <p class="text-indigo-100 text-sm opacity-80" id="currentDate"></p>
+            </div>
+            <button onclick="exportCSV()" class="bg-white/20 px-3 py-1 rounded-full text-xs hover:bg-white/30 transition">匯出 CSV</button>
+        </div>
+        
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            <div class="bg-white/20 p-3 rounded-2xl">
+                <p class="text-xs">今日支出</p>
+                <p class="text-lg font-bold" id="todayTotal">$0</p>
+            </div>
+            <div class="bg-white/20 p-3 rounded-2xl">
+                <p class="text-xs">本月累計</p>
+                <p class="text-lg font-bold" id="monthTotal">$0</p>
+            </div>
+        </div>
+    </header>
 
-    <div id="ui-layer">
-        <div class="main-panel" id="main-panel">
-            <div class="status-bar">
-                <span>單元: FIRE-SCENARIO <span id="level">1</span></span>
-                <span>系統穩定度: <span id="score">100</span>%</span>
+    <main class="p-4 space-y-6">
+        <!-- 圖表區域 -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-gray-500 text-sm font-medium">支出比例</h2>
+                <span id="chartFallback" class="text-[10px] text-gray-300 hidden">暫無資料</span>
             </div>
-            <h1>沉浸式防災訓練</h1>
-            <div id="timer-bar"><div id="timer-progress"></div></div>
-            
-            <div id="content-area">
-                <div id="question-box">初始化連結中...</div>
-                <div class="options-grid">
-                    <div class="option-card" id="opt0" onclick="selectAnswer(0)">選項 A</div>
-                    <div class="option-card" id="opt1" onclick="selectAnswer(1)">選項 B</div>
-                </div>
-                <div id="system-msg"></div>
+            <div class="h-44 flex justify-center">
+                <canvas id="categoryChart"></canvas>
             </div>
+        </section>
+
+        <!-- 列表區域 -->
+        <section>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-gray-700 font-bold italic">Recent Activity</h2>
+                <button onclick="clearAll()" class="text-xs text-red-400 font-medium">清除全部資料</button>
+            </div>
+            <div id="expenseList" class="space-y-3">
+                <!-- 紀錄會顯示在這裡 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 語音控制浮動欄 -->
+    <div class="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pointer-events-none">
+        <div class="max-w-md mx-auto flex flex-col items-center space-y-2 pointer-events-auto">
+            <p id="hintText" class="text-[10px] text-gray-400 bg-white/80 px-3 py-1 rounded-full shadow-sm">說出「午餐 120 元」</p>
+            <button id="voiceBtn" class="bg-indigo-600 text-white w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-90 hover:bg-indigo-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            </button>
         </div>
     </div>
 
-<script>
-    const quizData = [
-        { q: "【火場應變】室內失火濃煙密佈，逃生姿勢應為何？", options: ["挺起身子快跑", "採低姿勢爬行"], correct: 1, voice: "警報！室內濃煙密佈。請選擇逃生姿勢：選項一，快跑；選項二，低姿勢爬行。" },
-        { q: "【設備操作】使用滅火器時，噴嘴應瞄準火焰的哪個部位？", options: ["火焰的頂部", "火焰的根部"], correct: 1, voice: "發現火點。應瞄準何處？選項一，頂部；選項二，根部。" },
-        { q: "【通訊求救】火災發生時，撥打 999 應優先說出什麼資訊？", options: ["詳細地址與起火原因", "目前的得分與心情"], correct: 0, voice: "聯繫指揮中心。應優先通報什麼？選項一，地址與起火原因；選項二，心情狀態。" },
-        { q: "【避難常識】逃生時若發現門把發燙，正確做法是？", options: ["不開門，尋找其他出口", "戴上手套迅速開門衝出"], correct: 0, voice: "門把發燙，熱輻射異常。你的判斷？選項一，不開門；選項二，戴手套衝出。" },
-        { q: "【地震防護】地震發生時，最好的防護動作口訣是？", options: ["趴下、掩護、穩住", "衝刺、跳躍、翻滾"], correct: 0, voice: "強烈地震！請執行防護口訣：選項一，趴下、掩護、穩住；選項二，衝刺、翻滾。" }
-    ];
+    <!-- 提示框 -->
+    <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-4 rounded-3xl text-sm hidden z-50 text-center shadow-2xl backdrop-blur-sm">
+        <div class="mb-2 font-bold text-indigo-300">正在傾聽中...</div>
+        <div id="liveResult" class="text-xs opacity-70 italic">請說出品項與金額</div>
+    </div>
 
-    let currentIdx = 0;
-    let score = 100;
-    let lock = false;
-    let baseFogDensity = 0.16;
+    <script>
+        // 初始化資料
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let chart = null;
 
-    // --- 音效系統 (多層合成) ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function playSuccessSound() {
-        const t = audioCtx.currentTime;
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'sine';
-        o.frequency.setValueAtTime(523.25, t); // C5
-        o.frequency.exponentialRampToValueAtTime(1046.5, t + 0.3); // C6
-        g.gain.setValueAtTime(0.1, t);
-        g.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(); o.stop(t + 0.4);
-    }
+        const categories = {
+            '飲食': ['餐', '飯', '麵', '飲', '喝', '咖啡', '早餐', '午餐', '晚餐', '零食', '肉', '菜'],
+            '交通': ['車', '捷運', '公車', '高鐵', '油', '計程車', 'Uber', '火車', '票'],
+            '娛樂': ['玩', '電影', '歌', '遊戲', '運動', '健身', '旅遊', '門票'],
+            '生活': ['買', '藥', '水', '電', '租', '日用', '衣服', '鞋', '雜貨', '超市'],
+            '其他': []
+        };
 
-    function playFailSound() {
-        const t = audioCtx.currentTime;
-        const o1 = audioCtx.createOscillator();
-        const g1 = audioCtx.createGain();
-        o1.type = 'sawtooth';
-        o1.frequency.setValueAtTime(150, t);
-        o1.frequency.linearRampToValueAtTime(40, t + 0.5);
-        g1.gain.setValueAtTime(0.15, t);
-        g1.gain.linearRampToValueAtTime(0, t + 0.5);
-        o1.connect(g1); g1.connect(audioCtx.destination);
-        o1.start(); o1.stop(t + 0.5);
-    }
+        window.onload = () => {
+            updateUI();
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('zh-TW', { 
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
+            });
+        };
 
-    // 火場背景音合成 (包含風聲與劈啪聲)
-    function playFireAmbient() {
-        // 1. 低頻轟鳴 (風與熱對流)
-        const rumble = audioCtx.createOscillator();
-        const rumbleGain = audioCtx.createGain();
-        rumble.type = 'sine';
-        rumble.frequency.setValueAtTime(45, audioCtx.currentTime);
-        rumbleGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-        rumble.connect(rumbleGain);
-        rumbleGain.connect(audioCtx.destination);
-        rumble.start();
-
-        // 2. 劈啪聲模擬 (Procedural Crackle)
-        const crackleInterval = setInterval(() => {
-            if (audioCtx.state === 'closed') { clearInterval(crackleInterval); return; }
-            const t = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(Math.random() * 2000 + 1000, t);
-            g.gain.setValueAtTime(0.015, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-            osc.connect(g);
-            g.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(t + 0.05);
-        }, 150);
-    }
-
-    function speak(text) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'zh-TW';
-        utter.rate = 1.0;
-        window.speechSynthesis.speak(utter);
-    }
-
-    // --- Three.js 環境極致化 ---
-    let scene, camera, renderer, extinguisher, particles, mainLight, fireLight;
-    function init3D() {
-        scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x0a0303, baseFogDensity);
-        
-        camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        camera.position.z = 7;
-        
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        // 3D 滅火器 (升級材質)
-        extinguisher = new THREE.Group();
-        const matBody = new THREE.MeshStandardMaterial({color: 0xcc0000, metalness: 0.9, roughness: 0.1});
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 32), matBody);
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI*2, 0, Math.PI/2), matBody);
-        head.position.y = 1;
-        extinguisher.add(body); extinguisher.add(head);
-        scene.add(extinguisher);
-
-        // 餘燼粒子
-        const geo = new THREE.BufferGeometry();
-        const pCount = 6000;
-        const pos = new Float32Array(pCount * 3);
-        const vels = [];
-        for(let i=0; i<pCount*3; i+=3) {
-            pos[i] = (Math.random()-0.5)*35;
-            pos[i+1] = (Math.random()-0.5)*35;
-            pos[i+2] = (Math.random()-0.5)*35;
-            vels.push({x: (Math.random()-0.5)*0.01, y: Math.random()*0.06 + 0.02});
+        function updateUI() {
+            renderList();
+            renderChart();
+            updateSummary();
+            localStorage.setItem('expenses', JSON.stringify(expenses));
         }
-        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        const mat = new THREE.PointsMaterial({size: 0.07, color: 0xff6600, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending});
-        particles = new THREE.Points(geo, mat);
-        particles.userData.vels = vels;
-        scene.add(particles);
 
-        // 光源
-        mainLight = new THREE.PointLight(0x00ffff, 1, 15);
-        mainLight.position.set(-3, 4, 2);
-        scene.add(mainLight);
-
-        fireLight = new THREE.PointLight(0xff3300, 4, 30);
-        fireLight.position.set(4, -2, 3);
-        scene.add(fireLight);
-
-        scene.add(new THREE.AmbientLight(0x050505));
-
-        animate();
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const t = Date.now() * 0.001;
-        
-        // 滅火器旋轉
-        extinguisher.rotation.y += 0.01;
-        extinguisher.position.y = Math.sin(t) * 0.25;
-        
-        // 粒子動力學
-        const pArr = particles.geometry.attributes.position.array;
-        const vArr = particles.userData.vels;
-        for(let i=0; i<vArr.length; i++) {
-            pArr[i*3] += vArr[i].x + Math.sin(t*0.5 + i)*0.005;
-            pArr[i*3+1] += vArr[i].y;
-            if(pArr[i*3+1] > 15) pArr[i*3+1] = -15;
-        }
-        particles.geometry.attributes.position.needsUpdate = true;
-
-        // 火光模擬
-        fireLight.intensity = 3 + Math.sin(t * 12) * 2;
-        if(Math.random() > 0.99) fireLight.intensity = 15; // 爆燃效果
-        
-        // 霧氣跟隨進度
-        scene.fog.density += (baseFogDensity - scene.fog.density) * 0.05;
-        
-        renderer.render(scene, camera);
-    }
-
-    function renderStep() {
-        if (currentIdx >= quizData.length) {
-            showEnd(); return;
-        }
-        lock = false;
-        const data = quizData[currentIdx];
-        document.getElementById('question-box').innerText = data.q;
-        document.getElementById('opt0').innerText = data.options[0];
-        document.getElementById('opt1').innerText = data.options[1];
-        document.getElementById('system-msg').innerText = ">>> 正在掃描決策路徑...";
-        document.getElementById('system-msg').style.color = "var(--accent)";
-        document.getElementById('level').innerText = currentIdx + 1;
-        
-        speak(data.voice);
-    }
-
-    function selectAnswer(idx) {
-        if (lock) return;
-        lock = true;
-        
-        const correct = quizData[currentIdx].correct;
-        const msg = document.getElementById('system-msg');
-        const vignette = document.getElementById('danger-vignette');
-        const panel = document.getElementById('main-panel');
-
-        if (idx === correct) {
-            playSuccessSound();
-            msg.innerText = ">>> [判定正確] 環境風險指數下降";
-            msg.style.color = "var(--success)";
+        function updateSummary() {
+            const now = new Date();
+            const todayStr = now.toLocaleDateString();
             
-            // 答對背景效果：藍綠色閃爍與煙霧大幅消散
-            baseFogDensity = Math.max(0.02, baseFogDensity - 0.05);
-            mainLight.color.set(0x00ffaa);
-            mainLight.intensity = 10;
-            vignette.classList.add('success-flash');
+            const todaySum = expenses
+                .filter(e => new Date(e.date).toLocaleDateString() === todayStr)
+                .reduce((sum, e) => sum + e.amount, 0);
+                
+            const monthSum = expenses
+                .filter(e => {
+                    const d = new Date(e.date);
+                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                })
+                .reduce((sum, e) => sum + e.amount, 0);
+
+            document.getElementById('todayTotal').innerText = `$${todaySum.toLocaleString()}`;
+            document.getElementById('monthTotal').innerText = `$${monthSum.toLocaleString()}`;
+        }
+
+        function renderList() {
+            const list = document.getElementById('expenseList');
+            list.innerHTML = '';
             
-            speak("判定正確。空氣品質改善。");
-            setTimeout(() => {
-                vignette.classList.remove('success-flash');
-                mainLight.intensity = 1;
-            }, 800);
+            const displayData = [...expenses].reverse().slice(0, 20);
+            
+            if (displayData.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                        <p class="text-gray-400 text-sm">還沒有紀錄喔！</p>
+                        <p class="text-indigo-400 text-xs mt-1">按住麥克風說「咖啡 65 元」</p>
+                    </div>
+                `;
+                return;
+            }
+
+            displayData.forEach((exp) => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow-sm flex justify-between items-center transition active:scale-95";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center font-bold text-[10px]">
+                            ${exp.category}
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">${exp.item}</p>
+                            <p class="text-[10px] text-gray-400">${new Date(exp.date).toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-end">
+                        <p class="font-black text-indigo-600">-$${exp.amount.toLocaleString()}</p>
+                        <button onclick="deleteRecord('${exp.id}')" class="text-[10px] text-red-300 hover:text-red-500">刪除</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const dataMap = {};
+            Object.keys(categories).forEach(cat => dataMap[cat] = 0);
+            
+            expenses.forEach(e => {
+                if(dataMap[e.category] !== undefined) dataMap[e.category] += e.amount;
+                else dataMap['其他'] += e.amount;
+            });
+
+            const labels = Object.keys(dataMap).filter(k => dataMap[k] > 0);
+            const values = labels.map(k => dataMap[k]);
+
+            if (chart) chart.destroy();
+            
+            if (labels.length === 0) {
+                document.getElementById('chartFallback').classList.remove('hidden');
+                return;
+            } else {
+                document.getElementById('chartFallback').classList.add('hidden');
+            }
+
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'],
+                        hoverOffset: 4,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 8, padding: 15, font: { size: 10 } } }
+                    },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        function deleteRecord(id) {
+            expenses = expenses.filter(e => String(e.id) !== String(id));
+            updateUI();
+        }
+
+        function clearAll() {
+            if(confirm('警告：這會永久刪除手機中的所有記帳紀錄，確定嗎？')) {
+                expenses = [];
+                updateUI();
+            }
+        }
+
+        function exportCSV() {
+            if (expenses.length === 0) return alert('目前沒有紀錄可匯出');
+            let csvContent = "\uFEFF日期,項目,金額,分類\n";
+            expenses.forEach(e => {
+                csvContent += `${new Date(e.date).toLocaleString()},${e.item},${e.amount},${e.category}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `記帳備份_${new Date().toLocaleDateString()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 語音辨識邏輯
+        const voiceBtn = document.getElementById('voiceBtn');
+        const toast = document.getElementById('toast');
+        const liveResult = document.getElementById('liveResult');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'zh-TW';
+            recognition.interimResults = true; // 開啟即時結果顯示
+
+            voiceBtn.addEventListener('click', () => {
+                try {
+                    recognition.start();
+                    voiceBtn.classList.add('recording', 'bg-red-500');
+                    toast.classList.remove('hidden');
+                    liveResult.innerText = '正在傾聽...';
+                } catch(e) {
+                    console.log("Recognition already started");
+                }
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0].transcript)
+                    .join('');
+                liveResult.innerText = transcript;
+                
+                if (event.results[0].isFinal) {
+                    processVoiceCommand(transcript);
+                }
+            };
+
+            recognition.onend = () => {
+                voiceBtn.classList.remove('recording', 'bg-red-500');
+                setTimeout(() => toast.classList.add('hidden'), 1000);
+            };
+
+            recognition.onerror = (e) => {
+                console.error(e);
+                toast.classList.add('hidden');
+                if(e.error === 'not-allowed') alert('請允許瀏覽器存取麥克風權限以使用語音功能。');
+            };
         } else {
-            score -= 20;
-            playFailSound();
-            msg.innerText = ">>> [判定錯誤] 災情連鎖擴散中";
-            msg.style.color = "var(--danger)";
-            
-            // 答錯背景效果：紅光與煙霧激增
-            baseFogDensity += 0.12;
-            mainLight.color.set(0xff0000);
-            vignette.classList.add('alert-active');
-            panel.classList.add('shake-panel');
-            
-            speak("決策失誤。危險正在逼近。");
-            setTimeout(() => {
-                vignette.classList.remove('alert-active');
-                panel.classList.remove('shake-panel');
-            }, 1200);
+            document.getElementById('hintText').innerText = "您的瀏覽器不支援語音辨識";
+            voiceBtn.style.opacity = "0.5";
         }
 
-        document.getElementById('score').innerText = score;
+        function processVoiceCommand(text) {
+            // 解析金額：支援「120」、「一百二十」等數字（Speech API 通常會轉成數字）
+            const amountMatch = text.match(/\d+/);
+            if (!amountMatch) return;
 
-        setTimeout(() => {
-            currentIdx++;
-            renderStep();
-        }, 3200);
-    }
+            const amount = parseInt(amountMatch[0]);
+            // 過濾掉金額和常見單位詞，剩下的視為品項
+            let item = text.replace(amountMatch[0], '').replace(/元|塊|錢/g, '').trim();
+            
+            if (!item) item = "未命名支出";
 
-    function showEnd() {
-        const finalStatus = score >= 80 ? "卓越防護戰士" : score >= 60 ? "合格防災員" : "核心崩毀：撤離失敗";
-        speak(`模擬終止。穩定度得分：百分之${score}。評級：${finalStatus}。`);
-        
-        document.getElementById('content-area').innerHTML = `
-            <div style="margin: 40px 0;">
-                <h2 style="color:var(--accent); font-size: 2.2rem; letter-spacing: 2px;">訓練報告書</h2>
-                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); margin: 30px 0;">
-                    <p style="font-size: 1.6rem; margin: 0 0 10px 0;">最終穩定度: ${score}%</p>
-                    <p style="color: #fff; font-weight: bold; font-size: 1.2rem;">${finalStatus}</p>
-                </div>
-                <button class="option-card" style="width:100%; pointer-events:auto;" onclick="location.reload()">重新初始化系統</button>
-            </div>
-        `;
-    }
+            // 自動分類邏輯
+            let category = '其他';
+            for (const [cat, keywords] of Object.entries(categories)) {
+                if (keywords.some(k => item.includes(k))) {
+                    category = cat;
+                    break;
+                }
+            }
 
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+            const newExpense = {
+                id: Date.now().toString(),
+                item,
+                amount,
+                category,
+                date: new Date().toISOString()
+            };
 
-    window.onload = () => {
-        init3D();
-        document.body.addEventListener('click', () => {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            playFireAmbient();
-        }, {once: true});
-        
-        setTimeout(renderStep, 1000);
-    };
-</script>
+            expenses.push(newExpense);
+            updateUI();
+            
+            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+        }
+    </script>
 </body>
 </html>
