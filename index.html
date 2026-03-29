@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAFS | 中三選科攻略</title>
+    <title>BAFS | Byd Busnes i Fyfyrwyr Bl9</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
@@ -47,10 +47,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 5%;
+            padding: 10px 5%;
         }
 
-        .logo {
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-img {
+            max-width: 45px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 4px;
+            background: white;
+            padding: 2px;
+        }
+
+        .logo-name {
             font-family: 'Poppins', sans-serif;
             font-weight: 900;
             font-size: 1.5rem;
@@ -76,7 +91,6 @@
 
         nav a:hover { color: var(--primary); }
 
-        /* 通用區塊樣式 */
         section {
             padding: 100px 10%;
             min-height: 80vh;
@@ -86,53 +100,97 @@
             position: relative;
         }
 
+        /* 首頁 Hero 區域 */
         .hero {
-            text-align: center;
             background: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
             padding-top: 150px;
         }
 
+        .hero-flex-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .hero-text-content {
+            text-align: left;
+            flex: 1.2;
+            min-width: 320px;
+        }
+
+        .hero-image-wrapper {
+            flex: 0.8;
+            min-width: 300px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-main-img {
+            max-width: 380px;
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 24px;
+            /* 圖片背景處理：將包圍容器設為與圖片背景一致的白色 */
+            background-color: #ffffff; 
+            padding: 10px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.4), 0 0 20px rgba(14, 165, 233, 0.2);
+            animation: float 5s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
         .badge {
             display: inline-block;
-            padding: 5px 15px;
-            background: rgba(14, 165, 233, 0.2);
+            padding: 6px 18px;
+            background: rgba(14, 165, 233, 0.15);
             border: 1px solid var(--primary);
             color: var(--primary);
             border-radius: 50px;
             font-weight: 700;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
             letter-spacing: 1px;
         }
 
         h1 {
-            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-size: clamp(2.4rem, 5vw, 4.2rem);
             margin: 0;
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1.15;
+            color: #fff;
         }
 
         .highlight { color: var(--primary); }
 
-        /* 入科初心區塊 */
-        .motivation-container {
+        /* 入科初心卡片 */
+        .motivation-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            gap: 25px;
             margin-top: 40px;
         }
 
-        .motivation-bubble {
-            background: rgba(14, 165, 233, 0.05);
-            border: 1px dashed var(--primary);
-            padding: 25px;
+        .bubble {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 30px;
             border-radius: 20px;
-            transition: 0.3s;
+            transition: 0.4s;
+            position: relative;
         }
 
-        .motivation-bubble:hover {
-            background: rgba(14, 165, 233, 0.15);
-            border-style: solid;
+        .bubble:hover {
+            background: rgba(14, 165, 233, 0.1);
+            transform: translateY(-5px);
+            border-color: var(--primary);
         }
 
         .user-tag {
@@ -152,79 +210,110 @@
             margin-top: 50px;
         }
 
-        .feature-card {
+        .card {
             background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
             padding: 40px;
             border-radius: 24px;
             border: 1px solid rgba(255,255,255,0.05);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: 0.3s;
         }
 
-        .feature-card i {
+        .card:hover { transform: translateY(-10px); border-color: rgba(14, 165, 233, 0.4); }
+
+        .card i {
             font-size: 3rem;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             background: linear-gradient(to bottom right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .feature-card h3 {
+        .card h3 {
             font-size: 1.8rem;
             margin: 0 0 15px 0;
             color: #fff;
         }
 
-        .feature-card p {
+        .card p {
             color: var(--text-dim);
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             margin: 0;
-            font-weight: 400;
         }
 
-        /* 建議列表 */
-        .advice-item {
+        .item {
             background: rgba(255,255,255,0.03);
             margin-bottom: 12px;
-            padding: 18px 25px;
+            padding: 20px 25px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             gap: 15px;
-            border-left: 4px solid var(--secondary);
+            border-left: 5px solid var(--secondary);
+            transition: 0.3s;
         }
 
+        .item:hover { background: rgba(255,255,255,0.08); }
+
         .btn {
-            padding: 16px 35px;
+            padding: 18px 40px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             text-decoration: none;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             display: inline-block;
             transition: 0.3s;
+            margin-top: 30px;
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
         }
 
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.4); }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(14, 165, 233, 0.5); }
 
         footer {
-            padding: 40px 10%;
+            padding: 50px 10%;
             text-align: center;
             border-top: 1px solid rgba(255,255,255,0.05);
             color: var(--text-dim);
             font-size: 0.9rem;
         }
 
+        /* 最後一頁底圖 */
+        .footer-logo-main {
+            max-width: 450px;
+            width: 100%;
+            height: auto;
+            margin: 0 auto 40px auto;
+            display: block;
+            border-radius: 24px;
+            background-color: #ffffff; /* 讓圖片背景與框線融合 */
+            padding: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 992px) {
+            .hero-flex-container { flex-direction: column; text-align: center; }
+            .hero-text-content { text-align: center; order: 2; }
+            .hero-image-wrapper { order: 1; margin-bottom: 20px; }
+            h1 { font-size: 2.8rem; }
+        }
+
         @media (max-width: 768px) {
-            section { padding: 60px 5%; }
-            h1 { font-size: 2.5rem; }
+            section { padding: 80px 5%; }
+            nav ul { display: none; }
+            .hero-main-img { max-width: 280px; }
+            .footer-logo-main { max-width: 320px; }
         }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo">BAFS EXPLORER</div>
+        <div class="logo-box">
+            <img src="https://i.ibb.co/Y7RfQpLY/MYF-Logo.png" alt="MYF Logo" class="logo-img">
+            <div class="logo-name">BAFS EXPLORER</div>
+        </div>
         <ul>
             <li><a href="#motivation">入科初心</a></li>
             <li><a href="#features">科目特色</a></li>
@@ -232,99 +321,109 @@
         </ul>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero" id="home">
-        <div class="badge">中三升中四：選科全攻略</div>
-        <h1>BAFS 到底讀啲咩？<br><span class="highlight">係咪想像中咁難？</span></h1>
-        <p style="font-size: 1.3rem; color: var(--text-dim); max-width: 750px; margin: 25px auto;">
-        </p>
-        <div style="margin-top: 35px;">
-            <a href="#motivation" class="btn">點解大家會揀呢科？</a>
+        <div class="hero-flex-container">
+            <!-- 首頁大圖：放置在文字左側，並處理背景色 -->
+            <div class="hero-image-wrapper">
+                <img src="https://i.ibb.co/0ybShSXQ/Whats-App-Image-2026-03-29-at-23-45-56.png" alt="BAFS 核心視覺圖" class="hero-main-img">
+            </div>
+            
+            <div class="hero-text-content">
+                <div class="badge">中三選科全攻略：2026-27</div>
+                <h1>BAFS 到底讀啲咩？<br><span class="highlight">係咪想像中咁難？</span></h1>
+                <p style="font-size: 1.2rem; color: var(--text-dim); margin: 25px 0; max-width: 600px;">
+                    唔好畀「商科好難」嘅錯覺嚇走！聽完師兄姐真心話，保證你對呢科有全新體會。
+                </p>
+                <div>
+                    <a href="#motivation" class="btn">解鎖學科密碼 <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- SECTION: Motivation -->
     <section id="motivation">
         <h2 style="font-size: 2.2rem; color: var(--accent);"><i class="fa-solid fa-heart"></i> 入科初心：同學當初諗咩？</h2>
-        <p style="font-size: 1.2rem; margin-bottom: 20px;">我地揀 BAFS 其實係因為：</p>
-        <div class="motivation-container">
-            <div class="motivation-bubble">
+        <p style="font-size: 1.15rem; margin-bottom: 25px; color: var(--text-dim);">好多中三同學揀 BAFS 其實係因為：</p>
+        <div class="motivation-grid">
+            <div class="bubble">
                 <p>「覺得比起純文科死背歷史、地理，BAFS 更有邏輯。想揀一科同社會接軌、實用啲嘅科目。」</p>
                 <span class="user-tag">#實用主義型同學</span>
             </div>
-            <div class="motivation-bubble">
+            <div class="bubble">
                 <p>「對錢點樣運作好有興趣。想學識點睇公司帳目，甚至幻想過未來自己創業做老闆！」</p>
                 <span class="user-tag">#未來老闆型同學</span>
             </div>
-            <div class="motivation-bubble">
+            <div class="bubble">
                 <p>「大學想入商學院 (BBA) 或者做會計師。聽講 BAFS 係入大學商科最好嘅地基，所以提早預備。」</p>
                 <span class="user-tag">#前途規劃型同學</span>
             </div>
-            <div class="motivation-bubble">
+            <div class="bubble">
                 <p>「唔鍾意純計數（好似物理、化學），又唔想純寫字。BAFS 嘅『一半計數、一半分析』啱啱好。」</p>
                 <span class="user-tag">#平衡發展型同學</span>
             </div>
         </div>
     </section>
 
-    <!-- SECTION: Features -->
     <section id="features" style="background: rgba(30, 41, 59, 0.3);">
         <h2 style="font-size: 2.2rem; border-left: 6px solid var(--primary); padding-left: 20px;">科目特色：BAFS 係讀咩㗎？</h2>
-        <p style="font-size: 1.2rem; color: var(--text-dim);">簡而言之，BAFS 係學點樣「管理一間公司」同「理財」。</p>
+        <p style="font-size: 1.15rem; color: var(--text-dim);">簡而言之，BAFS 係學點樣「管理一間公司」同「理財」。</p>
         
         <div class="feature-grid">
-            <div class="feature-card">
+            <div class="card">
                 <i class="fa-solid fa-calculator"></i>
                 <h3>會計 (Accounting)</h3>
                 <p>學點樣記錄生意往來、計成本、整資產負債表。你會練到一身「數字敏感度」，係商科嘅靈魂。</p>
             </div>
-            <div class="feature-card">
+            <div class="card">
                 <i class="fa-solid fa-briefcase"></i>
                 <h3>商業管理 (Business)</h3>
                 <p>研究公司點樣請人（人力資源）、點樣宣傳（市場營銷）、點樣做決策，完全唔係死背！</p>
             </div>
-            <div class="feature-card">
+            <div class="card">
                 <i class="fa-solid fa-chart-line"></i>
                 <h3>財務規劃 (Finance)</h3>
                 <p>學理財、風險管理。你會學識分析股票、強積金同保險，甚至係個人理財知識，終身受用。</p>
             </div>
         </div>
 
-        <div style="margin-top: 40px; padding: 30px; background: rgba(14, 165, 233, 0.1); border-radius: 20px;">
-            <h4 style="color: var(--primary); margin-top: 0; font-size: 1.5rem;">💡 BAFS 的獨特之處：</h4>
-            <ul style="font-size: 1.1rem; padding-left: 20px;">
-                <li style="margin-bottom: 10px;"><b>文理兼備：</b>適合唔鍾意極端死背，又唔鍾意極端計難數嘅同學。</li>
-                <li style="margin-bottom: 10px;"><b>代入感強：</b>題目通常係一個真實個案（例如茶餐廳執笠分析），讀落好有共鳴。</li>
+        <div style="margin-top: 50px; padding: 40px; background: rgba(14, 165, 233, 0.05); border-radius: 24px; border: 1px solid rgba(14, 165, 233, 0.2);">
+            <h4 style="color: var(--primary); margin-top: 0; font-size: 1.5rem;"><i class="fa-solid fa-lightbulb"></i> BAFS 的獨特之處：</h4>
+            <ul style="font-size: 1.1rem; padding-left: 20px; color: var(--text-dim);">
+                <li style="margin-bottom: 12px;"><b>文理兼備：</b>適合唔鍾意極端死背，又唔鍾意極端計難數嘅同學。</li>
+                <li style="margin-bottom: 12px;"><b>代入感強：</b>題目通常係一個真實個案（例如茶餐廳執笠分析），讀落好有共鳴。</li>
                 <li><b>一科兩用：</b>高中會分會計模組或商業管理模組，你可以按強項發揮。</li>
             </ul>
         </div>
     </section>
 
-    <!-- SECTION: Challenges & Advice -->
     <section id="challenge">
-        <h2 style="font-size: 2.2rem; color: #f87171;">⚠️ 真實挑戰與師兄姐建議</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
+        <h2 style="font-size: 2.2rem; color: #f87171;"><i class="fa-solid fa-triangle-exclamation"></i> 真實挑戰與師兄姐建議</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 30px;">
             <div>
-                <h3 style="color: #fff;">主要挑戰：</h3>
-                <div class="advice-item">會計報表數字「錯一個毫子就唔平」，極考細心。</div>
-                <div class="advice-item">範圍廣，需要同時運用邏輯計數同文字表達。</div>
-                <div class="advice-item">需要對商業世界有基本觸覺，唔可以完全唔睇新聞。</div>
+                <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 20px;">主要挑戰：</h3>
+                <div class="item"><i class="fa-solid fa-pen-nib"></i> 會計報表數字「錯一個毫子就唔平」，極考細心。</div>
+                <div class="item"><i class="fa-solid fa-layer-group"></i> 範圍廣，需要同時運用邏輯計數同文字表達。</div>
+                <div class="item"><i class="fa-solid fa-rss"></i> 需要對商業世界有基本觸覺，唔可以完全唔睇新聞。</div>
             </div>
             <div>
-                <h3 style="color: #fff;">師兄師姐建議：</h3>
-                <div class="advice-item">對商業有一定的興趣。</div>
-                <div class="advice-item">養成每日睇 5 分鐘財經新聞嘅習慣。</div>
-                <div class="advice-item">多問問題，因為會計知識係環環相扣，地基唔穩後面會好辛苦。</div>
+                <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 20px;">師兄師姐建議：</h3>
+                <div class="item"><i class="fa-solid fa-thumbs-up"></i> 對商業有一定的興趣先好揀。</div>
+                <div class="item"><i class="fa-solid fa-clock"></i> 養成每日睇 5 分鐘財經新聞嘅習慣。</div>
+                <div class="item"><i class="fa-solid fa-comments"></i> 多問問題，因為會計知識係環環相扣，地基穩好重要。</div>
             </div>
         </div>
     </section>
 
-    <!-- Final Section -->
-    <section style="text-align: center; background: radial-gradient(circle at bottom, #1e293b, #020617);">
-        <h2 style="font-size: 3.5rem; margin-bottom: 20px;">期待喺 BAFS 堂見到你！</h2>
-        <p style="font-size: 1.5rem; color: var(--text-dim); margin-bottom: 40px;">選科係大決定，如果有任何唔明，隨時搵我哋傾下。</p>
+    <section style="text-align: center; background: radial-gradient(circle at bottom, #1e293b, #020617); min-height: 70vh;">
+        <!-- 最後一頁底圖：處理背景色 -->
+        <img src="https://i.ibb.co/0ybShSXQ/Whats-App-Image-2026-03-29-at-23-45-56.png" alt="BAFS 未來願景圖" class="footer-logo-main">
+        
+        <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); margin-bottom: 20px; font-weight: 900;">期待喺 BAFS 堂見到你！</h2>
+        <p style="font-size: 1.3rem; color: var(--text-dim); margin-bottom: 45px; max-width: 800px; margin-left: auto; margin-right: auto;">
+            選科係人生第一個大決定，如果你對商業、理財或者未來創業有任何憧憬，歡迎隨時搵我哋傾下。
+        </p>
         <div>
-            <a href="#" class="btn" style="background: var(--accent);">領取學科小冊子</a>
+            <a href="#" class="btn" style="background: var(--accent); padding: 20px 50px;">領取學科小冊子 <i class="fa-solid fa-download" style="margin-left: 10px;"></i></a>
         </div>
     </section>
 
