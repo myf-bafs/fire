@@ -1,504 +1,336 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EASY Finance - 旅程即時管家</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAFS | 中三選科攻略</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Montserrat:wght@700;900&display=swap');
-        
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .font-mont { font-family: 'Montserrat', sans-serif; }
-        
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #6366f1;
+            --accent: #f472b6;
+            --bg-dark: #0f172a;
+            --bg-deep: #020617;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #cbd5e1;
         }
 
-        .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        * {
+            box-sizing: border-box;
+            scroll-behavior: smooth;
         }
 
-        .page { display: none; }
-        .page-active { display: block; animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        .mic-active {
-            box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
-            animation: ring 1.5s infinite;
-        }
-
-        @keyframes ring {
-            70% { box-shadow: 0 0 0 20px rgba(244, 63, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
-        }
-
-        /* 日曆特定樣式 */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-        }
-        .calendar-day {
-            aspect-ratio: 1;
+        /* 導覽列 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            padding: 15px 5%;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            margin: 0;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+
+        nav a:hover { color: var(--primary); }
+
+        /* 通用區塊樣式 */
+        section {
+            padding: 100px 10%;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
             position: relative;
         }
-        .day-active { background-color: #4f46e5; color: white !important; }
-        .day-has-data::after {
-            content: '';
-            position: absolute;
-            bottom: 6px;
-            width: 4px;
-            height: 4px;
-            background-color: #f43f5e;
-            border-radius: 50%;
+
+        .hero {
+            text-align: center;
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
+            padding-top: 150px;
         }
-        .day-active.day-has-data::after { background-color: white; }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(14, 165, 233, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 50px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            margin: 0;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .highlight { color: var(--primary); }
+
+        /* 入科初心區塊 */
+        .motivation-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .motivation-bubble {
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px dashed var(--primary);
+            padding: 25px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .motivation-bubble:hover {
+            background: rgba(14, 165, 233, 0.15);
+            border-style: solid;
+        }
+
+        .user-tag {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        /* 科目特色卡片 */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-card h3 {
+            font-size: 1.8rem;
+            margin: 0 0 15px 0;
+            color: #fff;
+        }
+
+        .feature-card p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* 建議列表 */
+        .advice-item {
+            background: rgba(255,255,255,0.03);
+            margin-bottom: 12px;
+            padding: 18px 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .btn {
+            padding: 16px 35px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.4); }
+
+        footer {
+            padding: 40px 10%;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            section { padding: 60px 5%; }
+            h1 { font-size: 2.5rem; }
+        }
     </style>
 </head>
-<body class="pb-32">
+<body>
 
-    <!-- 主頁 (Dashboard) -->
-    <div id="home-page" class="page page-active p-6">
-        <header class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Financial Status</h2>
-                <h1 class="text-2xl font-black text-slate-800 font-mont">Wallet</h1>
-            </div>
-            <button onclick="openManualInput()" class="p-3 bg-indigo-50 rounded-2xl active:scale-90 transition border border-indigo-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-            </button>
-        </header>
-
-        <div id="activeTripBanner" class="hidden mb-6 bg-indigo-600 p-4 rounded-[2rem] shadow-lg flex justify-between items-center text-white">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl">✈️</div>
-                <div>
-                    <p id="activeTripName" class="text-xs font-black opacity-80">載入中...</p>
-                    <p id="activeTripRate" class="text-sm font-bold">匯率 1 : 1</p>
-                </div>
-            </div>
-            <button onclick="switchPage('trips')" class="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black backdrop-blur-sm">查看列表</button>
-        </div>
-
-        <section class="bg-white p-6 rounded-[2.5rem] card-shadow mb-8 border border-slate-50 relative overflow-hidden">
-            <div class="relative z-10">
-                <div class="mb-6 flex items-center gap-4 bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                    <div class="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-lg">💰</div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">今日支出</p>
-                        <h4 id="todaySpendText" class="text-lg font-black font-mont text-slate-800">$0</h4>
-                    </div>
-                </div>
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">本月預算執行</p>
-                        <h3 id="budgetStatusText" class="text-sm font-bold text-slate-600">計算中...</h3>
-                    </div>
-                    <div class="text-right">
-                        <span id="currentSpendText" class="text-xl font-black font-mont text-indigo-600">$0</span>
-                        <span class="text-slate-300 font-bold"> / </span>
-                        <button onclick="setBudget()" id="budgetTargetText" class="text-slate-400 font-bold underline font-mont">$5,000</button>
-                    </div>
-                </div>
-                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div id="budgetBar" class="h-full bg-indigo-500 transition-all duration-700" style="width: 0%"></div>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="text-slate-800 font-black text-sm">最近紀錄</h3>
-                <button onclick="clearData()" class="text-[10px] font-bold text-rose-400">清空所有數據</button>
-            </div>
-            <div id="recentList" class="space-y-3"></div>
-        </section>
-    </div>
-
-    <!-- 日曆頁 (Calendar) -->
-    <div id="calendar-page" class="page p-6">
-        <header class="mb-6">
-            <h2 class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Expense Timeline</h2>
-            <h1 class="text-2xl font-black text-slate-800 font-mont">Calendar</h1>
-        </header>
-
-        <div class="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-50 mb-6">
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="changeMonth(-1)" class="p-2 text-slate-400 hover:text-indigo-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <h3 id="calendarMonthTitle" class="text-sm font-black text-slate-800 font-mont uppercase">載入中...</h3>
-                <button onclick="changeMonth(1)" class="p-2 text-slate-400 hover:text-indigo-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </button>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                <span class="text-[8px] font-black text-slate-300 uppercase">Sun</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Mon</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Tue</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Wed</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Thu</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Fri</span>
-                <span class="text-[8px] font-black text-slate-300 uppercase">Sat</span>
-            </div>
-            <div id="calendarGrid" class="calendar-grid"></div>
-        </div>
-
-        <div class="px-2">
-            <h3 id="selectedDateLabel" class="text-xs font-black text-slate-400 uppercase mb-4 tracking-wider">今日消費明細</h3>
-            <div id="dayExpenseList" class="space-y-3"></div>
-        </div>
-    </div>
-
-    <!-- 旅程頁 (Trips) -->
-    <div id="trips-page" class="page p-6">
-        <header class="mb-6 flex justify-between items-end">
-            <div>
-                <h2 class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Travel Management</h2>
-                <h1 class="text-2xl font-black text-slate-800 font-mont">Trips</h1>
-            </div>
-            <button onclick="openAddTripModal()" class="px-4 py-2 bg-indigo-600 text-white text-[10px] font-black rounded-full shadow-lg">+ 新增旅程</button>
-        </header>
-        <div id="activeTripsContainer" class="space-y-6"></div>
-    </div>
-
-    <!-- 統計頁 (Stats) -->
-    <div id="stats-page" class="page p-6">
-        <header class="mb-8">
-            <h2 class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Financial Reports</h2>
-            <h1 class="text-2xl font-black text-slate-800 font-mont">Statistics</h1>
-        </header>
-        <div class="bg-white p-6 rounded-[2.5rem] card-shadow border border-slate-50 mb-6">
-            <canvas id="mainChart" class="h-44"></canvas>
-        </div>
-        <div id="categoryStats" class="space-y-4"></div>
-    </div>
-
-    <!-- 底部導覽 -->
-    <nav class="fixed bottom-6 left-6 right-6 h-20 glass-nav rounded-[2.5rem] card-shadow z-50 flex justify-between items-center px-4">
-        <button onclick="switchPage('home')" id="nav-home" class="flex-1 flex flex-col items-center gap-1 text-indigo-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            <span class="text-[8px] font-black">概覽</span>
-        </button>
-        <button onclick="switchPage('trips')" id="nav-trips" class="flex-1 flex flex-col items-center gap-1 text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2.935M11 20c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9 4.03 9 9 9z" /></svg>
-            <span class="text-[8px] font-black">旅程</span>
-        </button>
-        <div class="flex-1 flex justify-center -mt-10">
-            <button id="micBtn" class="w-14 h-14 bg-rose-500 rounded-full shadow-lg flex items-center justify-center text-white active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-            </button>
-        </div>
-        <button onclick="switchPage('calendar')" id="nav-calendar" class="flex-1 flex flex-col items-center gap-1 text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            <span class="text-[8px] font-black">日曆</span>
-        </button>
-        <button onclick="switchPage('stats')" id="nav-stats" class="flex-1 flex flex-col items-center gap-1 text-slate-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-            <span class="text-[8px] font-black">統計</span>
-        </button>
+    <nav>
+        <div class="logo">BAFS EXPLORER</div>
+        <ul>
+            <li><a href="#motivation">入科初心</a></li>
+            <li><a href="#features">科目特色</a></li>
+            <li><a href="#challenge">挑戰與建議</a></li>
+        </ul>
     </nav>
 
-    <!-- 模態框 (手動輸入) -->
-    <div id="manualInputModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] hidden flex flex-col justify-end">
-        <div class="bg-white rounded-t-[3rem] w-full p-8 animate-slideUp">
-            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" onclick="closeManualInput()"></div>
-            <h2 class="text-xl font-black text-slate-800 mb-6">新增消費紀錄</h2>
-            <div class="space-y-4">
-                <input id="manualItem" type="text" placeholder="項目內容" class="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold border-none">
-                <div class="grid grid-cols-2 gap-4">
-                    <input id="manualAmount" type="number" placeholder="金額" class="w-full bg-slate-50 p-4 rounded-2xl text-sm font-black text-indigo-600 border-none">
-                    <select id="manualCategory" class="w-full bg-slate-50 p-4 rounded-2xl text-sm font-bold border-none">
-                        <option value="飲食">飲食</option><option value="交通">交通</option>
-                        <option value="娛樂">娛樂</option><option value="生活">生活</option>
-                        <option value="其他">其他</option>
-                    </select>
-                </div>
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="badge">中三升中四：選科全攻略</div>
+        <h1>BAFS 到底讀啲咩？<br><span class="highlight">係咪想像中咁難？</span></h1>
+        <p style="font-size: 1.3rem; color: var(--text-dim); max-width: 750px; margin: 25px auto;">
+        </p>
+        <div style="margin-top: 35px;">
+            <a href="#motivation" class="btn">點解大家會揀呢科？</a>
+        </div>
+    </section>
+
+    <!-- SECTION: Motivation -->
+    <section id="motivation">
+        <h2 style="font-size: 2.2rem; color: var(--accent);"><i class="fa-solid fa-heart"></i> 入科初心：同學當初諗咩？</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">好多中三同學揀 BAFS 其實係因為：</p>
+        <div class="motivation-container">
+            <div class="motivation-bubble">
+                <p>「覺得比起純文科死背歷史、地理，BAFS 更有邏輯。想揀一科同社會接軌、實用啲嘅科目。」</p>
+                <span class="user-tag">#實用主義型同學</span>
             </div>
-            <div class="flex gap-3 mt-8">
-                <button onclick="closeManualInput()" class="flex-1 py-4 bg-slate-100 text-slate-400 font-black rounded-[2rem] text-sm">取消</button>
-                <button onclick="confirmManualInput()" class="flex-1 py-4 bg-indigo-600 text-white font-black rounded-[2rem] text-sm shadow-lg">儲存</button>
+            <div class="motivation-bubble">
+                <p>「對錢點樣運作好有興趣。想學識點睇公司帳目，甚至幻想過未來自己創業做老闆！」</p>
+                <span class="user-tag">#未來老闆型同學</span>
+            </div>
+            <div class="motivation-bubble">
+                <p>「大學想入商學院 (BBA) 或者做會計師。聽講 BAFS 係入大學商科最好嘅地基，所以提早預備。」</p>
+                <span class="user-tag">#前途規劃型同學</span>
+            </div>
+            <div class="motivation-bubble">
+                <p>「唔鍾意純計數（好似物理、化學），又唔想純寫字。BAFS 嘅『一半計數、一半分析』啱啱好。」</p>
+                <span class="user-tag">#平衡發展型同學</span>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- 語音 Overlay -->
-    <div id="micOverlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white hidden">
-        <div class="w-24 h-24 bg-rose-500 rounded-full flex items-center justify-center mb-8 mic-active">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+    <!-- SECTION: Features -->
+    <section id="features" style="background: rgba(30, 41, 59, 0.3);">
+        <h2 style="font-size: 2.2rem; border-left: 6px solid var(--primary); padding-left: 20px;">科目特色：BAFS 係讀咩㗎？</h2>
+        <p style="font-size: 1.2rem; color: var(--text-dim);">簡而言之，BAFS 係學點樣「管理一間公司」同「理財」。</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fa-solid fa-calculator"></i>
+                <h3>會計 (Accounting)</h3>
+                <p>學點樣記錄生意往來、計成本、整資產負債表。你會練到一身「數字敏感度」，係商科嘅靈魂。</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-briefcase"></i>
+                <h3>商業管理 (Business)</h3>
+                <p>研究公司點樣請人（人力資源）、點樣宣傳（市場營銷）、點樣做決策，完全唔係死背！</p>
+            </div>
+            <div class="feature-card">
+                <i class="fa-solid fa-chart-line"></i>
+                <h3>財務規劃 (Finance)</h3>
+                <p>學理財、風險管理。你會學識分析股票、強積金同保險，甚至係個人理財知識，終身受用。</p>
+            </div>
         </div>
-        <p id="liveText" class="text-slate-400 px-10 text-center italic text-sm">請說出內容與金額</p>
-        <button onclick="closeMic()" class="mt-12 text-slate-500 text-xs font-bold border border-slate-700 px-6 py-2 rounded-full">取消</button>
-    </div>
 
-    <script>
-        // --- 核心狀態 ---
-        let state = {
-            expenses: JSON.parse(localStorage.getItem('expenses_v5')) || [],
-            trips: JSON.parse(localStorage.getItem('trips_v5')) || [],
-            activeTripId: localStorage.getItem('active_trip_id_v5') || null,
-            monthlyBudget: parseInt(localStorage.getItem('monthly_budget_v5')) || 5000,
-            viewDate: new Date(),
-            selectedDate: new Date()
-        };
+        <div style="margin-top: 40px; padding: 30px; background: rgba(14, 165, 233, 0.1); border-radius: 20px;">
+            <h4 style="color: var(--primary); margin-top: 0; font-size: 1.5rem;">💡 BAFS 的獨特之處：</h4>
+            <ul style="font-size: 1.1rem; padding-left: 20px;">
+                <li style="margin-bottom: 10px;"><b>文理兼備：</b>適合唔鍾意極端死背，又唔鍾意極端計難數嘅同學。</li>
+                <li style="margin-bottom: 10px;"><b>代入感強：</b>題目通常係一個真實個案（例如茶餐廳執笠分析），讀落好有共鳴。</li>
+                <li><b>一科兩用：</b>高中會分會計模組或商業管理模組，你可以按強項發揮。</li>
+            </ul>
+        </div>
+    </section>
 
-        const CATEGORIES = {
-            '飲食': { emoji: '🍛', color: '#f59e0b', keys: ['餐', '食', '飯', '飲', '咖', '茶'] },
-            '交通': { emoji: '🚌', color: '#3b82f6', keys: ['車', '巴', '的', 'Uber'] },
-            '娛樂': { emoji: '🎮', color: '#8b5cf6', keys: ['玩', '戲', 'Game', '門票'] },
-            '生活': { emoji: '🏠', color: '#ec4899', keys: ['買', '衫', '水電', '酒店'] },
-            '其他': { emoji: '✨', color: '#94a3b8', keys: [] }
-        };
+    <!-- SECTION: Challenges & Advice -->
+    <section id="challenge">
+        <h2 style="font-size: 2.2rem; color: #f87171;">⚠️ 真實挑戰與師兄姐建議</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
+            <div>
+                <h3 style="color: #fff;">主要挑戰：</h3>
+                <div class="advice-item">會計報表數字「錯一個毫子就唔平」，極考細心。</div>
+                <div class="advice-item">範圍廣，需要同時運用邏輯計數同文字表達。</div>
+                <div class="advice-item">需要對商業世界有基本觸覺，唔可以完全唔睇新聞。</div>
+            </div>
+            <div>
+                <h3 style="color: #fff;">師兄師姐建議：</h3>
+                <div class="advice-item">對商業有一定的興趣。</div>
+                <div class="advice-item">養成每日睇 5 分鐘財經新聞嘅習慣。</div>
+                <div class="advice-item">多問問題，因為會計知識係環環相扣，地基唔穩後面會好辛苦。</div>
+            </div>
+        </div>
+    </section>
 
-        window.onload = () => { 
-            state.selectedDate = new Date(); // 初始化選擇今日
-            updateDashboard(); 
-        };
+    <!-- Final Section -->
+    <section style="text-align: center; background: radial-gradient(circle at bottom, #1e293b, #020617);">
+        <h2 style="font-size: 3.5rem; margin-bottom: 20px;">期待喺 BAFS 堂見到你！</h2>
+        <p style="font-size: 1.5rem; color: var(--text-dim); margin-bottom: 40px;">選科係大決定，如果有任何唔明，隨時搵我哋傾下。</p>
+        <div>
+            <a href="#" class="btn" style="background: var(--accent);">領取學科小冊子</a>
+        </div>
+    </section>
 
-        function saveData() {
-            localStorage.setItem('expenses_v5', JSON.stringify(state.expenses));
-            localStorage.setItem('trips_v5', JSON.stringify(state.trips));
-            localStorage.setItem('active_trip_id_v5', state.activeTripId);
-            localStorage.setItem('monthly_budget_v5', state.monthlyBudget);
-        }
+    <footer>
+        <p>© 2026-27 中三選科宣傳小組 | 專為未來商業奇才而設</p>
+    </footer>
 
-        // --- 頁面切換 ---
-        function switchPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('page-active'));
-            document.getElementById(page + '-page').classList.add('page-active');
-            
-            if(page === 'home') updateDashboard();
-            if(page === 'calendar') renderCalendar();
-            if(page === 'stats') { renderStats(); renderChart(); }
-            
-            document.querySelectorAll('nav button').forEach(btn => {
-                btn.classList.remove('text-indigo-600');
-                btn.classList.add('text-slate-300');
-            });
-            document.getElementById('nav-' + page).classList.replace('text-slate-300', 'text-indigo-600');
-        }
-
-        // --- 日曆功能 ---
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const title = document.getElementById('calendarMonthTitle');
-            grid.innerHTML = '';
-
-            const year = state.viewDate.getFullYear();
-            const month = state.viewDate.getMonth();
-            title.innerText = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(state.viewDate);
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateObj = new Date(year, month, d);
-                const dateKey = dateObj.toLocaleDateString('en-CA');
-                
-                const hasData = state.expenses.some(e => {
-                    const eDate = new Date(e.date).toLocaleDateString('en-CA');
-                    return eDate === dateKey;
-                });
-
-                const isSelected = state.selectedDate.toLocaleDateString('en-CA') === dateKey;
-
-                const dayEl = document.createElement('div');
-                dayEl.className = `calendar-day text-slate-700 ${isSelected ? 'day-active' : ''} ${hasData ? 'day-has-data' : ''}`;
-                dayEl.innerText = d;
-                dayEl.onclick = () => {
-                    state.selectedDate = new Date(year, month, d);
-                    renderCalendar(); 
-                };
-                grid.appendChild(dayEl);
-            }
-            renderDayExpenses();
-        }
-
-        function renderDayExpenses() {
-            const list = document.getElementById('dayExpenseList');
-            const label = document.getElementById('selectedDateLabel');
-            const dateKey = state.selectedDate.toLocaleDateString('en-CA');
-            label.innerText = `${dateKey} 消費明細`;
-            list.innerHTML = '';
-
-            const dayExpenses = state.expenses.filter(e => 
-                new Date(e.date).toLocaleDateString('en-CA') === dateKey
-            );
-
-            if (dayExpenses.length === 0) {
-                list.innerHTML = '<p class="text-center text-slate-300 text-[10px] py-10">當日無消費紀錄</p>';
-                return;
-            }
-
-            let total = 0;
-            dayExpenses.forEach(e => {
-                total += e.amount;
-                const c = CATEGORIES[e.category] || CATEGORIES['其他'];
-                list.innerHTML += `
-                    <div class="bg-white p-4 rounded-3xl shadow-sm flex justify-between items-center border border-slate-50">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center text-lg">${c.emoji}</div>
-                            <div>
-                                <p class="font-bold text-slate-800 text-sm">${e.item}</p>
-                                <p class="text-[8px] text-slate-400 font-bold">${e.tripName || '本地消費'}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <p class="font-black text-slate-800 font-mont text-sm">$${Math.round(e.amount)}</p>
-                            <button onclick="deleteExpense(${e.id})" class="text-slate-200 hover:text-rose-500 p-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            list.innerHTML += `<p class="text-right px-4 text-xs font-black text-indigo-600">Total: $${Math.round(total).toLocaleString()}</p>`;
-        }
-
-        function changeMonth(dir) {
-            state.viewDate.setMonth(state.viewDate.getMonth() + dir);
-            renderCalendar();
-        }
-
-        // --- 儀表板更新 ---
-        function updateDashboard() {
-            const todayStr = new Date().toLocaleDateString('en-CA');
-            const todayTotal = state.expenses
-                .filter(e => new Date(e.date).toLocaleDateString('en-CA') === todayStr)
-                .reduce((s, e) => s + e.amount, 0);
-            
-            document.getElementById('todaySpendText').innerText = `$${Math.round(todayTotal).toLocaleString()}`;
-
-            const thisMonth = new Date().getMonth();
-            const monthTotal = state.expenses
-                .filter(e => new Date(e.date).getMonth() === thisMonth)
-                .reduce((s, e) => s + e.amount, 0);
-
-            document.getElementById('currentSpendText').innerText = `$${Math.round(monthTotal).toLocaleString()}`;
-            document.getElementById('budgetTargetText').innerText = `$${state.monthlyBudget.toLocaleString()}`;
-            const percent = (monthTotal / state.monthlyBudget) * 100;
-            document.getElementById('budgetBar').style.width = Math.min(percent, 100) + '%';
-            
-            const list = document.getElementById('recentList');
-            list.innerHTML = '';
-            
-            const sortedExpenses = [...state.expenses].sort((a,b) => b.id - a.id).slice(0, 10);
-            
-            if (sortedExpenses.length === 0) {
-                list.innerHTML = '<p class="text-center text-slate-300 text-[10px] py-6">暫無紀錄</p>';
-            } else {
-                sortedExpenses.forEach(e => {
-                    const c = CATEGORIES[e.category] || CATEGORIES['其他'];
-                    list.innerHTML += `
-                    <div class="bg-white p-4 rounded-3xl shadow-sm flex justify-between items-center animate-slideUp">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center">${c.emoji}</div>
-                            <div>
-                                <p class="font-bold text-sm">${e.item}</p>
-                                <p class="text-[8px] text-slate-400 font-bold">${new Date(e.date).toLocaleDateString('en-CA')}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <p class="font-black text-sm text-slate-700">$${Math.round(e.amount).toLocaleString()}</p>
-                            <button onclick="deleteExpense(${e.id})" class="text-slate-200 hover:text-rose-400 p-2 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-                    </div>`;
-                });
-            }
-        }
-
-        // --- 刪除功能 ---
-        function deleteExpense(id) {
-            if(confirm('確定要刪除這筆紀錄嗎？')) {
-                state.expenses = state.expenses.filter(e => e.id !== id);
-                saveData();
-                
-                // 根據當前所在頁面刷新 UI
-                const activePage = document.querySelector('.page-active').id;
-                if (activePage === 'home-page') updateDashboard();
-                if (activePage === 'calendar-page') renderCalendar();
-                if (activePage === 'stats-page') { renderStats(); renderChart(); }
-            }
-        }
-
-        function openManualInput() { document.getElementById('manualInputModal').classList.remove('hidden'); }
-        function closeManualInput() { document.getElementById('manualInputModal').classList.add('hidden'); }
-        
-        function confirmManualInput() {
-            const item = document.getElementById('manualItem').value;
-            const amount = parseFloat(document.getElementById('manualAmount').value);
-            if(!item || !amount) return;
-            state.expenses.push({
-                id: Date.now(),
-                item,
-                amount,
-                category: document.getElementById('manualCategory').value,
-                date: new Date().toISOString()
-            });
-            saveData();
-            closeManualInput();
-            document.getElementById('manualItem').value = '';
-            document.getElementById('manualAmount').value = '';
-            updateDashboard();
-        }
-
-        function setBudget() {
-            const b = prompt("請輸入每月預算金額", state.monthlyBudget);
-            if(b && !isNaN(b)) { state.monthlyBudget = parseInt(b); saveData(); updateDashboard(); }
-        }
-
-        // 語音識別
-        let recognition = null;
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'zh-HK';
-            recognition.onresult = (e) => {
-                const text = e.results[0][0].transcript;
-                document.getElementById('liveText').innerText = text;
-                const amount = (text.match(/\d+/) || [0])[0];
-                if(amount > 0) {
-                    state.expenses.push({ id: Date.now(), item: text.replace(/\d+/g, '').trim() || '語音輸入', amount: parseFloat(amount), category: '其他', date: new Date().toISOString() });
-                    saveData();
-                }
-            };
-            recognition.onend = () => { 
-                document.getElementById('micOverlay').classList.add('hidden'); 
-                updateDashboard(); 
-            };
-        }
-        
-        document.getElementById('micBtn').onclick = () => { 
-            document.getElementById('micOverlay').classList.remove('hidden'); 
-            document.getElementById('liveText').innerText = '請說出內容與金額 (例如：午餐 50 蚊)';
-            recognition.start(); 
-        };
-        
-        function closeMic() { recognition.stop(); }
-
-        function renderStats() { /* 保持原樣 */ }
-        function renderChart() { /* 保持原樣 */ }
-        function clearData() { if(confirm('警告：確定要清除所有記帳數據嗎？這無法還原。')) { state.expenses=[]; saveData(); updateDashboard(); } }
-    </script>
 </body>
 </html>
